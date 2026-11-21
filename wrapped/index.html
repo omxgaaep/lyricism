@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Wrapped, any time</title>
+<meta name="theme-color" content="#000000">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* VOICE: celebratory, bold, Stories-style. IDEA: a deck of full-screen story cards like a year-end recap.
+   PICTURE: each slide is one giant figure (artist photo, cover, number) on a colour field from that slide's art.
+   COLOUR: per-slide colour taken from the art, with black and white type. TYPE: Inter 900 at poster sizes. */
+:root{--c1:#1ed760;--c2:#0d3b1f;--spring:linear(0,.009,.037 1.7%,.153 3.6%,.776 10.3%,1.001,1.142 16%,1.185,1.209 19%,1.215 19.9% 20.8%,1.199,1.165 25%,1.056 30.3%,1.008 33%,.973,.958 39.4%,.954 41.7%,.96,.977 47.8%,1.006 54.1%,1.015 58.2%,1.006 66.6%,.997 74.5%,1);
+ --soft:linear(0,.06,.21 7%,.44 12.5%,.7 19%,.87 25.5%,.96 32%,1.01 39%,1.02 46%,1.008 60%,1)}
+*{box-sizing:border-box;min-width:0}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:#000;color:#fff;font:16px/1.4 -apple-system,'SF Pro Text',Inter,system-ui,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent}
+.stage{position:fixed;inset:0;display:grid;place-items:center;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+.story{position:relative;width:min(100vw,calc(100vh*9/16));height:min(100vh,calc(100vw*16/9));max-height:100vh;overflow:hidden;background:var(--c2);transition:background 1s}
+@media(min-width:700px){.story{border-radius:26px;height:min(92vh,calc(100vw*16/9));width:min(100vw,calc(92vh*9/16));box-shadow:0 30px 90px rgba(0,0,0,.6)}}
+.amb{position:fixed;inset:-20%;z-index:-1;filter:blur(110px) saturate(1.4) brightness(.55);background:radial-gradient(circle at 30% 30%,var(--c1),transparent 60%),radial-gradient(circle at 70% 70%,var(--c2),transparent 60%);transition:background 1s}
+.bars{position:absolute;top:12px;left:12px;right:12px;display:flex;gap:4px;z-index:5}
+.bars i{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.3);overflow:hidden}
+.bars i b{display:block;height:100%;width:0;background:#fff}
+.top{position:absolute;top:24px;left:16px;right:16px;display:flex;justify-content:space-between;align-items:center;z-index:5;font-weight:700;font-size:13px}
+.top a,.top button{color:#fff;text-decoration:none;border:0;background:rgba(0,0,0,.25);backdrop-filter:blur(10px);border-radius:999px;height:32px;padding:0 12px;font:600 12px inherit;cursor:pointer;display:inline-flex;align-items:center}
+.tap{position:absolute;top:60px;bottom:0;z-index:3;width:35%}.tap.l{left:0}.tap.r{right:0;width:65%}
+.slide{position:absolute;inset:0;padding:78px 26px 30px;display:flex;flex-direction:column;justify-content:center;gap:14px;z-index:2}
+.slide .k{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.85}
+.slide h2{margin:0;font-size:clamp(30px,9.5vmin,52px);font-weight:900;line-height:1.02;letter-spacing:-.035em;text-wrap:balance}
+.slide p{margin:0;font-size:17px;font-weight:600;opacity:.85;text-wrap:balance}
+.giant{font-size:clamp(84px,30vmin,170px);font-weight:900;line-height:.85;letter-spacing:-.06em}
+.photo{width:72%;aspect-ratio:1;border-radius:50%;background:#222 center/cover;align-self:center;box-shadow:0 30px 60px rgba(0,0,0,.45)}
+.photo.sq{border-radius:12px;width:78%}
+.list{display:flex;flex-direction:column;gap:12px}
+.li{display:grid;grid-template-columns:30px 52px minmax(0,1fr);align-items:center;gap:12px}
+.li .n{font-size:26px;font-weight:900;opacity:.6;text-align:right}
+.li .im{width:52px;height:52px;border-radius:50%;background:#222 center/cover}
+.li .im.sq{border-radius:8px}
+.li b{display:block;font-size:18px;font-weight:800;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li small{display:block;opacity:.7;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:9px 15px;border-radius:999px;background:rgba(255,255,255,.16);font-weight:800;font-size:clamp(15px,4.4vmin,22px);text-transform:capitalize}
+.chip:first-child{background:#fff;color:#000;font-size:clamp(22px,7vmin,36px)}
+.clock{display:flex;align-items:flex-end;gap:3px;height:120px}
+.clock i{flex:1;border-radius:4px 4px 0 0;background:rgba(255,255,255,.28);min-height:4px}
+.clock i.hi{background:#fff}
+.clockl{display:flex;justify-content:space-between;font-size:11px;font-weight:700;opacity:.6}
+/* entrance animations, staggered */
+.slide>*{animation:up .8s var(--soft) both}
+.slide>*:nth-child(2){animation-delay:.12s}.slide>*:nth-child(3){animation-delay:.24s}.slide>*:nth-child(4){animation-delay:.36s}.slide>*:nth-child(5){animation-delay:.48s}
+.list>*{animation:up .7s var(--soft) both}
+.list>*:nth-child(1){animation-delay:.3s}.list>*:nth-child(2){animation-delay:.42s}.list>*:nth-child(3){animation-delay:.54s}.list>*:nth-child(4){animation-delay:.66s}.list>*:nth-child(5){animation-delay:.78s}
+.photo,.giant{animation:pop 1s var(--spring) both!important}
+@keyframes up{from{opacity:0;transform:translateY(26px);filter:blur(6px)}}
+@keyframes pop{from{opacity:0;transform:scale(.6)}}
+.shapes{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+.shapes span{position:absolute;border-radius:50%;background:var(--c1);opacity:.55;filter:blur(2px);animation:float 9s ease-in-out infinite alternate}
+@keyframes float{to{transform:translate(30px,-40px) rotate(40deg) scale(1.1)}}
+/* home */
+.home{position:fixed;inset:0;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 30% 20%,#1ed76055,transparent 50%),radial-gradient(circle at 80% 80%,#ff2bd655,transparent 50%),#050505}
+.hcard{max-width:440px;width:100%;text-align:left}
+.hcard h1{font-size:clamp(44px,12vw,72px);line-height:.95;letter-spacing:-.045em;margin:0 0 14px;font-weight:900}
+.hcard h1 span{background:linear-gradient(90deg,#1ed760,#ff2bd6);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hcard p{opacity:.7;margin:0 0 26px;font-size:17px}
+.seg{display:flex;background:rgba(118,118,128,.24);border-radius:12px;padding:3px;margin-bottom:18px}
+.seg button{flex:1;border:0;background:none;color:#fff;font:700 14px inherit;padding:11px 6px;border-radius:10px;cursor:pointer;transition:background .25s,color .25s}
+.seg button.on{background:#fff;color:#000}
+.go{width:100%;height:56px;border:0;border-radius:28px;background:#1ed760;color:#000;font:800 17px inherit;cursor:pointer;transition:transform .5s var(--spring)}
+.go:active{transform:scale(.96)}
+.go.ghost{background:rgba(255,255,255,.12);color:#fff;margin-top:10px}
+.note{font-size:13px;opacity:.6;margin-top:14px}
+.note a{color:#fff}
+.load{display:flex;align-items:center;gap:12px;font-weight:700;opacity:.8}
+.spin{width:22px;height:22px;border-radius:50%;border:3px solid rgba(255,255,255,.2);border-top-color:#fff;animation:sp .8s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+.final{gap:10px}
+.final .cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:14px}
+.final .cols b{display:block;font-size:12px;opacity:.7;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.final .cols div div{font-weight:800;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.final .cover{width:46%;aspect-ratio:1;border-radius:8px;background:#222 center/cover;box-shadow:0 20px 40px rgba(0,0,0,.4)}
+.acts{position:absolute;left:26px;right:26px;bottom:26px;display:flex;gap:10px;z-index:6}
+.acts button{flex:1;height:48px;border:0;border-radius:24px;font:800 15px inherit;cursor:pointer;background:#fff;color:#000;transition:transform .5s var(--spring)}
+.acts button.g{background:rgba(0,0,0,.3);color:#fff}
+.acts button:active{transform:scale(.95)}
+button:focus-visible,a:focus-visible{outline:2px solid #fff;outline-offset:3px}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="amb" id="amb"></div>
+<div id="root"></div>
+<script>
+{
+const $=id=>document.getElementById(id);
+const store={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const RANGES={short_term:'the last 4 weeks',medium_term:'the last 6 months',long_term:'the last year'};
+const RANGE_SHORT={short_term:'4 weeks',medium_term:'6 months',long_term:'Year'};
+let range=store.get('wr_range')||'medium_term';
+
+/* ---------- Spotify (shares the login with Lyricism, same site) ---------- */
+async function token(){
+ if(+store.get('ll_exp')>Date.now()&&store.get('ll_token'))return store.get('ll_token');
+ const rt=store.get('ll_refresh'),cid=store.get('ll_cid');if(!rt||!cid)return null;
+ try{const r=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'refresh_token',refresh_token:rt,client_id:cid})});
+  const j=await r.json();if(!r.ok)return null;store.set('ll_token',j.access_token);store.set('ll_exp',Date.now()+j.expires_in*1000-60000);if(j.refresh_token)store.set('ll_refresh',j.refresh_token);return j.access_token}catch(e){return null}
+}
+async function sp(path){const t=await token();if(!t)throw new Error('auth');const r=await fetch('https://api.spotify.com/v1'+path,{headers:{Authorization:'Bearer '+t}});if(!r.ok)throw new Error(String(r.status));return r.json()}
+const loggedIn=()=>!!store.get('ll_refresh');
+const hasScope=()=>/\buser-top-read\b/.test(store.get('ll_scope')||'');
+const img=o=>(o?.images||[]).slice().sort((a,b)=>(b.width||0)-(a.width||0))[0]?.url||'';
+
+/* ---------- colours from images ---------- */
+const colCache={};
+function colours(url){
+ if(!url)return Promise.resolve(['#1ed760','#0d3b1f']);
+ if(colCache[url])return colCache[url];
+ return colCache[url]=new Promise(ok=>{const im=new Image();im.crossOrigin='anonymous';
+  im.onload=()=>{try{const c=document.createElement('canvas');c.width=c.height=24;const x=c.getContext('2d');x.drawImage(im,0,0,24,24);const d=x.getImageData(0,0,24,24).data,px=[];
+   for(let i=0;i<d.length;i+=4){const r=d[i],g=d[i+1],b=d[i+2],mx=Math.max(r,g,b),mn=Math.min(r,g,b);px.push({r,g,b,s:(mx-mn)*(mx/255)})}
+   px.sort((a,b)=>b.s-a.s);const A=px[0],B=px[Math.floor(px.length*.5)];
+   ok([`rgb(${A.r},${A.g},${A.b})`,`rgb(${B.r*.45|0},${B.g*.45|0},${B.b*.45|0})`])}catch(e){ok(['#1ed760','#0d3b1f'])}};
+  im.onerror=()=>ok(['#1ed760','#0d3b1f']);im.src=url});
+}
+
+/* ---------- gather data ---------- */
+async function gather(r){
+ const [A,T]=await Promise.all([sp(`/me/top/artists?limit=50&time_range=${r}`),sp(`/me/top/tracks?limit=50&time_range=${r}`)]);
+ const artists=(A.items||[]).filter(Boolean),tracks=(T.items||[]).filter(Boolean);
+ let recent=[];try{recent=(await sp('/me/player/recently-played?limit=50')).items||[]}catch(e){}
+ let longA=[],shortA=[];
+ try{if(r!=='long_term')longA=(await sp('/me/top/artists?limit=50&time_range=long_term')).items||[];else longA=artists}catch(e){}
+ try{if(r!=='short_term')shortA=(await sp('/me/top/artists?limit=50&time_range=short_term')).items||[];else shortA=artists}catch(e){}
+ let me=null;try{me=await sp('/me')}catch(e){}
+ return{artists,tracks,recent,longA,shortA,me};
+}
+function analyse(D){
+ const g=new Map();D.artists.forEach((a,i)=>(a.genres||[]).forEach(x=>g.set(x,(g.get(x)||0)+(50-i))));
+ const genres=[...g.entries()].sort((a,b)=>b[1]-a[1]).map(x=>x[0]).slice(0,6);
+ const years=D.tracks.map(t=>parseInt((t.album?.release_date||'').slice(0,4))).filter(y=>y>1900);
+ const dec=new Map();years.forEach(y=>{const d=Math.floor(y/10)*10;dec.set(d,(dec.get(d)||0)+1)});
+ const topDec=[...dec.entries()].sort((a,b)=>b[1]-a[1])[0];
+ const avgYear=years.length?Math.round(years.reduce((a,b)=>a+b,0)/years.length):null;
+ const oldest=D.tracks.slice().filter(t=>t.album?.release_date).sort((a,b)=>a.album.release_date.localeCompare(b.album.release_date))[0];
+ const hours=new Array(24).fill(0);D.recent.forEach(p=>{if(p.played_at)hours[new Date(p.played_at).getHours()]++});
+ const peak=D.recent.length?hours.indexOf(Math.max(...hours)):null;
+ const rep=new Map();D.recent.forEach(p=>{const t=p.track;if(!t)return;const k=t.id||t.name;const o=rep.get(k)||{t,n:0};o.n++;rep.set(k,o)});
+ const onRepeat=[...rep.values()].sort((a,b)=>b.n-a.n)[0];
+ const recentMins=Math.round(D.recent.reduce((a,p)=>a+(p.track?.duration_ms||0),0)/60000);
+ const longIds=new Set(D.longA.map(a=>a.id)),shortIds=new Set(D.shortA.map(a=>a.id));
+ const newFav=D.shortA.find(a=>!longIds.has(a.id));
+ const loyal=D.artists.find(a=>longIds.has(a.id)&&shortIds.has(a.id));
+ const uniqArtists=new Set(D.tracks.flatMap(t=>(t.artists||[]).map(a=>a.id))).size;
+ return{genres,topDec,avgYear,oldest,hours,peak,onRepeat,recentMins,newFav,loyal,uniqArtists};
+}
+function persona(X,D){
+ const p=X.peak;
+ if(p!=null&&(p>=22||p<4))return['The Night Owl','Most of your recent listening happens after dark.'];
+ if(p!=null&&p>=5&&p<9)return['The Early Riser','You start the day with music on.'];
+ if(X.newFav&&D.shortA[0]&&!new Set(D.longA.map(a=>a.id)).has(D.shortA[0].id))return['The Explorer','Your current #1 is a brand new find.'];
+ if(X.avgYear&&X.avgYear<2005)return['The Time Traveller',`Your top songs average out to ${X.avgYear}.`];
+ if(X.uniqArtists>=35)return['The Collector',`${X.uniqArtists} different artists in your top 50 songs.`];
+ if(X.uniqArtists<=15)return['The Loyalist',`Just ${X.uniqArtists} artists make up your top 50 songs.`];
+ return['The All-Rounder','A bit of everything, and it all works.'];
+}
+
+/* ---------- slides ---------- */
+function shapes(seed){let h='';for(let i=0;i<5;i++){const z=40+((seed*37+i*61)%120);h+=`<span style="width:${z}px;height:${z}px;left:${(seed*13+i*29)%90}%;top:${(seed*17+i*41)%90}%;animation-delay:${-i*1.7}s;opacity:${.25+((i*7)%4)/10}"></span>`}return `<div class="shapes">${h}</div>`}
+function build(D,X){
+ const S=[],a0=D.artists[0],t0=D.tracks[0],name=D.me?.display_name?.split(' ')[0]||'';
+ S.push({art:img(a0),html:`<div class="k">Wrapped · ${RANGE_SHORT[range]}</div><h2>${name?esc(name)+', here':'Here'}'s what you've been playing in ${RANGES[range]}.</h2><p>Tap to keep going.</p>`});
+ if(a0)S.push({art:img(a0),html:`<div class="k">Your top artist</div><div class="photo" style="background-image:url('${esc(img(a0))}')"></div><h2>${esc(a0.name)}</h2><p>${X.loyal&&X.loyal.id===a0.id?'Your number one, now and over the past year.':'Number one on your rotation.'}</p>`});
+ if(D.artists.length>=5)S.push({art:img(D.artists[1]),html:`<div class="k">Top artists</div><div class="list">${D.artists.slice(0,5).map((a,i)=>`<div class="li"><span class="n">${i+1}</span><span class="im" style="background-image:url('${esc(img(a))}')"></span><div><b>${esc(a.name)}</b><small>${esc((a.genres||[])[0]||'')}</small></div></div>`).join('')}</div>`});
+ if(t0)S.push({art:img(t0.album),html:`<div class="k">Your top song</div><div class="photo sq" style="background-image:url('${esc(img(t0.album))}')"></div><h2>${esc(t0.name)}</h2><p>${esc((t0.artists||[]).map(a=>a.name).join(', '))}</p>`});
+ if(D.tracks.length>=5)S.push({art:img(D.tracks[1].album),html:`<div class="k">Top songs</div><div class="list">${D.tracks.slice(0,5).map((t,i)=>`<div class="li"><span class="n">${i+1}</span><span class="im sq" style="background-image:url('${esc(img(t.album))}')"></span><div><b>${esc(t.name)}</b><small>${esc((t.artists||[])[0]?.name||'')}</small></div></div>`).join('')}</div>`});
+ if(X.genres.length>=2)S.push({art:img(D.artists[2]||a0),html:`<div class="k">Your sound</div><h2>You lived in ${esc(X.genres[0])}.</h2><div class="chips">${X.genres.map(g=>`<span class="chip">${esc(g)}</span>`).join('')}</div>`});
+ if(X.newFav)S.push({art:img(X.newFav),html:`<div class="k">New obsession</div><div class="photo" style="background-image:url('${esc(img(X.newFav))}')"></div><h2>${esc(X.newFav.name)}</h2><p>Brand new to your top artists this month.</p>`});
+ if(X.onRepeat&&X.onRepeat.n>=3)S.push({art:img(X.onRepeat.t.album),html:`<div class="k">On repeat lately</div><div class="giant">${X.onRepeat.n}×</div><h2>${esc(X.onRepeat.t.name)}</h2><p>Times you played it in your last 50 plays.</p>`});
+ if(X.peak!=null&&D.recent.length>=10){const h=X.peak,lab=new Date(2000,0,1,h).toLocaleTimeString([],{hour:'numeric'}),mx=Math.max(...X.hours)||1;
+  S.push({art:img(D.artists[3]||a0),html:`<div class="k">Prime time</div><h2>Your music peaks around ${esc(lab)}.</h2><div><div class="clock">${X.hours.map((v,i)=>`<i class="${i===h?'hi':''}" style="height:${Math.max(4,v/mx*100)}%"></i>`).join('')}</div><div class="clockl"><span>12am</span><span>6am</span><span>12pm</span><span>6pm</span><span>11pm</span></div></div><p>From your last ${D.recent.length} plays${X.recentMins?`, about ${X.recentMins} minutes of music`:''}.</p>`})}
+ if(X.topDec&&X.avgYear)S.push({art:img((X.oldest||t0)?.album),html:`<div class="k">Your era</div><div class="giant">${X.topDec[0]}s</div><h2>${X.topDec[1]} of your top ${D.tracks.length} songs are from the ${X.topDec[0]}s.</h2>${X.oldest?`<p>Oldest: ${esc(X.oldest.name)} (${esc(X.oldest.album.release_date.slice(0,4))})</p>`:''}`});
+ const [pt,pd]=persona(X,D);
+ S.push({art:img(a0),html:`<div class="k">Your listening personality</div><h2 style="font-size:clamp(40px,13vmin,72px)">${esc(pt)}</h2><p>${esc(pd)}</p>`});
+ S.push({art:img(a0),final:true,html:`<div class="k">Wrapped · ${RANGE_SHORT[range]}</div><div class="cover" style="background-image:url('${esc(img(a0))}')"></div>
+  <div class="cols"><div><b>Top artists</b>${D.artists.slice(0,5).map((a,i)=>`<div>${i+1} ${esc(a.name)}</div>`).join('')}</div><div><b>Top songs</b>${D.tracks.slice(0,5).map((t,i)=>`<div>${i+1} ${esc(t.name)}</div>`).join('')}</div></div>
+  <div class="cols"><div><b>Top genre</b><div style="text-transform:capitalize">${esc(X.genres[0]||'—')}</div></div><div><b>Personality</b><div>${esc(pt)}</div></div></div>`,data:{pt}});
+ return S;
+}
+
+/* ---------- player ---------- */
+let slides=[],cur=0,t0=0,paused=false,raf=null,D=null,X=null;
+const DUR=6000;
+async function show(i){
+ cur=Math.max(0,Math.min(slides.length-1,i));const s=slides[cur];
+ const [c1,c2]=await colours(s.art);
+ document.documentElement.style.setProperty('--c1',c1);document.documentElement.style.setProperty('--c2',c2);
+ $('sl').innerHTML=`${shapes(cur+3)}<div class="slide ${s.final?'final':''}">${s.html}</div>${s.final?`<div class="acts"><button id="save">Save image</button><button class="g" id="again">Change range</button></div>`:''}`;
+ if(s.final){$('save').onclick=e=>{e.stopPropagation();saveCard()};$('again').onclick=e=>{e.stopPropagation();home()}}
+ [...$('bars').children].forEach((b,k)=>b.firstChild.style.width=k<cur?'100%':'0');
+ t0=performance.now();
+}
+function loop(t){
+ if(!paused&&slides.length){const p=Math.min(1,(t-t0)/DUR),b=$('bars')?.children[cur];if(b)b.firstChild.style.width=(p*100)+'%';
+  if(p>=1&&cur<slides.length-1)show(cur+1)}
+ raf=requestAnimationFrame(loop);
+}
+function play(){
+ $('root').innerHTML=`<div class="stage"><div class="story" id="story"><div class="bars" id="bars">${slides.map(()=>'<i><b></b></i>').join('')}</div>
+  <div class="top"><span></span><span style="display:flex;gap:6px"><button id="pp">Pause</button><a href="../">Lyricism</a></span></div>
+  <div id="sl"></div><div class="tap l" id="tl"></div><div class="tap r" id="tr"></div></div></div>`;
+ $('tl').onclick=()=>show(cur-1);$('tr').onclick=()=>{if(cur<slides.length-1)show(cur+1)};
+ $('pp').onclick=()=>{paused=!paused;$('pp').textContent=paused?'Play':'Pause';if(!paused)t0=performance.now()-(parseFloat($('bars').children[cur].firstChild.style.width)||0)/100*DUR};
+ let hold;const st=$('story');
+ st.addEventListener('pointerdown',e=>{if(e.target.closest('button,a'))return;hold=setTimeout(()=>{paused=true},250)});
+ st.addEventListener('pointerup',()=>{clearTimeout(hold);if(paused&&$('pp').textContent==='Pause'){paused=false;t0=performance.now()-(parseFloat($('bars').children[cur].firstChild.style.width)||0)/100*DUR}});
+ show(0);cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
+}
+addEventListener('keydown',e=>{if(!slides.length)return;if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();if(cur<slides.length-1)show(cur+1)}if(e.key==='ArrowLeft')show(cur-1);if(e.key==='Escape')home()});
+
+/* ---------- share card ---------- */
+const loadImg=u=>new Promise(ok=>{if(!u)return ok(null);const im=new Image();im.crossOrigin='anonymous';im.onload=()=>ok(im);im.onerror=()=>ok(null);im.src=u});
+async function saveCard(){
+ const W=1080,H=1920,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d'),F='Inter,-apple-system,"Segoe UI",sans-serif';
+ const [c1,c2]=await colours(img(D.artists[0]));
+ const g=x.createLinearGradient(0,0,W,H);g.addColorStop(0,c1);g.addColorStop(1,c2);x.fillStyle=g;x.fillRect(0,0,W,H);
+ x.fillStyle='rgba(0,0,0,.25)';x.fillRect(0,0,W,H);
+ const im=await loadImg(img(D.artists[0]));const cs=560,cx=(W-cs)/2,cy=170;
+ x.save();x.shadowColor='rgba(0,0,0,.45)';x.shadowBlur=60;x.shadowOffsetY=30;x.fillStyle='#222';x.fillRect(cx,cy,cs,cs);x.restore();
+ if(im){const s=Math.min(im.width,im.height);x.drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,cx,cy,cs,cs)}
+ const fit=(t,max)=>{if(x.measureText(t).width<=max)return t;while(x.measureText(t+'…').width>max&&t.length>2)t=t.slice(0,-1);return t.trimEnd()+'…'};
+ x.fillStyle='#fff';let y=cy+cs+120;const colW=(W-200)/2;
+ x.font=`800 34px ${F}`;x.globalAlpha=.75;x.fillText('TOP ARTISTS',90,y);x.fillText('TOP SONGS',90+colW+20,y);x.globalAlpha=1;
+ x.font=`800 50px ${F}`;
+ for(let i=0;i<5;i++){y+=72;const a=D.artists[i],t=D.tracks[i];
+  if(a)x.fillText(fit(`${i+1} ${a.name}`,colW-10),90,y);if(t)x.fillText(fit(`${i+1} ${t.name}`,colW-10),90+colW+20,y)}
+ y+=120;x.font=`800 34px ${F}`;x.globalAlpha=.75;x.fillText('TOP GENRE',90,y);x.fillText('PERSONALITY',90+colW+20,y);x.globalAlpha=1;
+ y+=70;x.font=`800 50px ${F}`;const gname=(X.genres[0]||'—').replace(/\b\w/g,m=>m.toUpperCase());x.fillText(fit(gname,colW-10),90,y);x.fillText(fit(slides[slides.length-1].data.pt,colW-10),90+colW+20,y);
+ x.font=`700 34px ${F}`;x.globalAlpha=.7;x.fillText(`Wrapped · ${RANGES[range]}`,90,H-110);x.globalAlpha=1;
+ c.toBlob(b=>{if(!b)return;const f=new File([b],'my-wrapped.png',{type:'image/png'});
+  if(navigator.canShare&&navigator.canShare({files:[f]}))navigator.share({files:[f]}).catch(()=>{});
+  else{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='my-wrapped.png';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)}},'image/png');
+}
+
+/* ---------- home ---------- */
+function home(){
+ cancelAnimationFrame(raf);slides=[];
+ const li=loggedIn(),ok=li&&hasScope();
+ $('root').innerHTML=`<div class="home"><div class="hcard">
+  <h1>Your <span>Wrapped</span>, any time.</h1><p>Your top artists, songs, genres and listening habits, as a story you can tap through and share.</p>
+  ${ok?`<div class="seg" id="rg">${Object.keys(RANGES).map(k=>`<button data-r="${k}" class="${k===range?'on':''}">${RANGE_SHORT[k]}</button>`).join('')}</div><button class="go" id="go">Show my Wrapped</button>`
+   :li?`<button class="go" id="perm">Allow access to my listening</button><p class="note">One quick Spotify approval so Wrapped can read your top artists, songs and recent plays.</p>`
+   :`<a class="go" href="../" style="display:grid;place-items:center;text-decoration:none">Connect Spotify in Lyricism</a><p class="note">Log in once in Lyricism, then come back here.</p>`}
+  <p class="note"><a href="../">← Back to Lyricism</a></p></div></div>`;
+ if(ok){$('rg').querySelectorAll('button').forEach(b=>b.onclick=()=>{range=b.dataset.r;store.set('wr_range',range);$('rg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))});$('go').onclick=start}
+ if($('perm'))$('perm').onclick=()=>{location.href='../?login=wrapped'};
+}
+async function start(){
+ $('root').innerHTML=`<div class="home"><div class="load"><div class="spin"></div>Wrapping up your listening…</div></div>`;
+ try{D=await gather(range)}catch(e){
+  $('root').innerHTML=`<div class="home"><div class="hcard"><h1>Hmm.</h1><p>${e.message==='403'?'Spotify didn\'t allow access. Make sure your account is on the app\'s allowed list.':e.message==='auth'?'Your Spotify login expired. Reconnect in Lyricism.':'Couldn\'t load your listening right now. Check your connection.'}</p><button class="go" id="bk">Back</button></div></div>`;$('bk').onclick=home;return}
+ if(D.artists.length<3||D.tracks.length<3){$('root').innerHTML=`<div class="home"><div class="hcard"><h1>Not enough yet.</h1><p>Spotify doesn't have enough listening for ${RANGES[range]}. Try a longer range.</p><button class="go" id="bk">Back</button></div></div>`;$('bk').onclick=home;return}
+ X=analyse(D);slides=build(D,X);
+ await Promise.all(slides.map(s=>colours(s.art)));
+ play();
+}
+home();
+}
+</script>
+</body>
+</html>

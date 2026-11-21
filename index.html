@@ -569,7 +569,7 @@ const $=id=>document.getElementById(id);
 const store={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
 const REDIRECT=location.origin+location.pathname.replace(/index\.html$/,'');
 const BUILTIN_CID='f0c7f71a532c47a49356e22129ee182a';   // the app owner's Spotify app — friends just log in
-const SCOPES='user-read-currently-playing user-read-playback-state user-modify-playback-state streaming user-read-email user-read-private user-top-read playlist-read-private';
+const SCOPES='user-read-currently-playing user-read-playback-state user-modify-playback-state streaming user-read-email user-read-private user-top-read user-read-recently-played';
 const hasPlayerScope=()=>/\bstreaming\b/.test(store.get('ll_scope')||'');
 const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const ICON_PLAY='<svg width="20" height="20" viewBox="0 0 24 24"><path d="M7 4v16l13-8z" fill="currentColor"/></svg>';
@@ -1867,11 +1867,11 @@ $('gplay').onclick=()=>{playAlong=!playAlong;$('gplay').classList.toggle('on',pl
 /* ---------- boot ---------- */
 (async()=>{
  const p=new URLSearchParams(location.search);
- if(p.get('login')==='guess'){login(store.get('ll_cid')||BUILTIN_CID,'guess');return}
+ if(p.get('login')==='wrapped'){login(store.get('ll_cid')||BUILTIN_CID,'wrapped');return}
  if(p.get('join')){startGuest(p.get('join').replace(/[^a-z0-9]/gi,'').slice(0,16))}
  else if(p.get('code')){
   history.replaceState(null,'',REDIRECT);
-  try{await tokenReq({grant_type:'authorization_code',code:p.get('code'),redirect_uri:REDIRECT,client_id:store.get('ll_cid'),code_verifier:store.get('ll_verifier')});store.set('ll_scope',SCOPES);if(p.get('state')==='guess'){location.replace(REDIRECT+'guess/');return}startSpotify();if(store.get('ll_wantPlayer')){store.del('ll_wantPlayer');$('status').textContent='Logged in again. Tap the speaker button to play music here.'}}
+  try{await tokenReq({grant_type:'authorization_code',code:p.get('code'),redirect_uri:REDIRECT,client_id:store.get('ll_cid'),code_verifier:store.get('ll_verifier')});store.set('ll_scope',SCOPES);if(p.get('state')==='wrapped'){location.replace(REDIRECT+'wrapped/');return}startSpotify();if(store.get('ll_wantPlayer')){store.del('ll_wantPlayer');$('status').textContent='Logged in again. Tap the speaker button to play music here.'}}
   catch(e){$('status').textContent='Login failed: '+e.message}
  }else if(p.get('error')){history.replaceState(null,'',REDIRECT);$('status').textContent='Spotify login cancelled'}
  else if(store.get('ll_refresh'))startSpotify();
