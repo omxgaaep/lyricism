@@ -386,16 +386,26 @@ applyTeam();
 /* ---------- team list (all five leagues) ---------- */
 const slim=(t,lg)=>({id:String(t.id),lg,name:t.displayName||t.name,short:t.shortDisplayName||t.displayName||t.name,abbr:t.abbreviation||'',
  logo:(t.logos||[]).find(l=>!(l.rel||[]).includes('dark'))?.href||t.logos?.[0]?.href||'',logoDark:(t.logos||[]).find(l=>(l.rel||[]).includes('dark'))?.href||'',color:t.color||'',alt:t.alternateColor||''});
-async function loadTeams(){
- const c=LS('md_teams_v1');
- if(c&&Date.now()-c.at<5*864e5)TEAMS=c.lgs;
- else{const lgs={};await Promise.all(Object.keys(LG).map(async lg=>{try{const d=await j(`${API}${lg}/teams`);lgs[lg]=(d.sports?.[0]?.leagues?.[0]?.teams||[]).map(x=>slim(x.team,lg))}catch(e){lgs[lg]=c?.lgs?.[lg]||[]}}));
-  TEAMS=lgs;if(Object.values(lgs).some(a=>a.length))LS('md_teams_v1',{at:Date.now(),lgs})}
+// three ways to get each league's clubs: the teams list, the same list on ESPN's other host, then the league table
+async function teamsOf(lg){
+ const pick=d=>(d?.sports?.[0]?.leagues?.[0]?.teams||[]).map(x=>slim(x.team||x,lg)).filter(t=>t.id);
+ for(const u of [`${API}${lg}/teams`,`https://site.web.api.espn.com/apis/site/v2/sports/soccer/${lg}/teams`]){
+  try{const r=await fetch(u);if(r.ok){const t=pick(await r.json());if(t.length)return t}}catch(e){}}
+ try{const r=await fetch(`https://site.api.espn.com/apis/v2/sports/soccer/${lg}/standings`);if(r.ok){const d=await r.json();
+  const t=((d.children?.[0]?.standings?.entries)||d.standings?.entries||[]).map(e=>slim(e.team||{},lg)).filter(t=>t.id);if(t.length)return t}}catch(e){}
+ return [];
+}
+let teamsLoading=null;
+function loadTeams(){return teamsLoading||(teamsLoading=(async()=>{
+ const c=LS('md_teams_v2');
+ if(c&&Date.now()-c.at<5*864e5&&Object.values(c.lgs).every(a=>a.length))TEAMS=c.lgs;
+ else{const lgs={};await Promise.all(Object.keys(LG).map(async lg=>{const t=await teamsOf(lg);lgs[lg]=t.length?t:(c?.lgs?.[lg]||[])}));
+  TEAMS=lgs;if(Object.values(lgs).some(a=>a.length))LS('md_teams_v2',{at:Date.now(),lgs})}
  IDX={};Object.values(TEAMS).flat().forEach(t=>IDX[t.id]=t);
  // keep the saved team fresh (promotion/relegation, new badge)
- const me=IDX[TEAM];if(me&&(me.lg!==T.lg||me.logo!==T.logo||!T.comps)){saveTeam(me);applyTeam()}
+ const me=IDX[TEAM];if(me&&me.color&&(me.lg!==T.lg||me.logo!==T.logo||!T.comps)){saveTeam(me);applyTeam()}
  return TEAMS;
-}
+})().finally(()=>{teamsLoading=null}))}
 
 let events=[],selId=null,selLg=null,liveTimer=null,lastUs=null,side='us',summary=null,gen=0;
 
@@ -685,7 +695,8 @@ function renderPicker(){
   html+=`<h4>${LG[lg].flag} ${esc(LG[lg].name)}</h4><div class="tgrid">${ts.map((t,i)=>{const p=palette(t),b=dark()&&t.logoDark?t.logoDark:t.logo;n++;
    return `<button class="tc ${t.id===TEAM&&!firstVisit?'on':''}" data-id="${esc(t.id)}" style="--t1:${p.c1};--t2:${p.c2};animation-delay:${Math.min(i*18,260)}ms">${b?`<img src="${esc(b)}" alt="" loading="lazy">`:'<span class="ph"></span>'}<span>${esc(p.nick||t.short)}</span></button>`}).join('')}</div>`;
  }
- list.innerHTML=html||(Object.values(TEAMS).some(a=>a.length)?'<div class="empty">No teams match that search.</div>':'<div class="empty">Couldn\'t load the team list. Check your connection and try again.</div>');
+ list.innerHTML=html||(Object.values(TEAMS).some(a=>a.length)?'<div class="empty">No teams match that search.</div>':'<div class="empty">Couldn\'t load the team list. <button class="chip" id="pkRetry" style="margin-left:6px">Try again</button></div>');
+ const rt=$('pkRetry');if(rt)rt.onclick=()=>{TEAMS=null;renderPicker();loadTeams().then(renderPicker)};
  list.querySelectorAll('.tc').forEach(b=>b.onclick=()=>{const t=IDX[b.dataset.id];if(t)switchTeam(t)});
 }
 function openPicker(){
@@ -695,7 +706,7 @@ function openPicker(){
  $('pkL').innerHTML=[['all','All'],...Object.entries(LG).map(([k,v])=>[k,v.name])].map(([k,l])=>`<button class="chip ${k===pkLg?'on':''}" data-l="${k}">${esc(l)}</button>`).join('');
  $('pkL').querySelectorAll('.chip').forEach(b=>b.onclick=()=>{pkLg=b.dataset.l;$('pkL').querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===b));renderPicker();$('pkList').scrollTop=0});
  $('pkQ').value='';renderPicker();
- if(!TEAMS)loadTeams().then(renderPicker).catch(renderPicker);
+ if(!TEAMS||!Object.values(TEAMS).some(a=>a.length)){TEAMS=null;renderPicker();loadTeams().then(renderPicker).catch(renderPicker)}
  if(!matchMedia('(pointer:coarse)').matches)setTimeout(()=>$('pkQ').focus(),250);
 }
 function closePicker(){
