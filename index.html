@@ -166,6 +166,9 @@ body:not(.s-chat) .empty{z-index:3;inset:0}
 @media(max-width:560px){.stylebox{grid-template-columns:repeat(2,minmax(0,160px))}}
 .fsec{display:none}
 body.s-lock .fsec{display:block}
+.psec{display:none;grid-column:1/-1;border-top:.5px solid rgba(255,255,255,.14);margin-top:4px;padding-top:10px}
+body.s-orbit .psec{display:block}
+.ft i{display:block;width:26px;height:26px;border-radius:50%;box-shadow:inset -5px -4px 8px rgba(0,0,0,.45),0 0 8px rgba(255,255,255,.08)}
 .fsec{grid-column:1/-1;border-top:.5px solid rgba(255,255,255,.14);margin-top:4px;padding-top:10px}
 .fhd{display:flex;align-items:baseline;gap:8px;margin:0 2px 8px;font-size:13px}.fhd span{font-size:11px;opacity:.55}
 .frow{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
@@ -434,6 +437,10 @@ body.s-player .empty{display:none!important}
   <div class="fhd"><b>Lock Screen font</b><span>Clock and lyrics</span></div>
   <div class="frow" id="frow"></div>
   <div class="wrow"><span style="font-weight:300">A</span><input type="range" id="fw" min="300" max="900" step="100" aria-label="Font weight"><span style="font-weight:900">A</span><button class="wreset" id="fwr">Auto</button></div>
+ </div>
+ <div class="psec">
+  <div class="fhd"><b>Planet</b><span>Auto matches the album colours</span></div>
+  <div class="frow" id="prow"></div>
  </div>
 </div>
 
@@ -912,7 +919,7 @@ const R_={
   },
   planet(force){
    const cv=$('pgl');if(!cv)return;
-   const key=pickPlanet(albumRGB),P=PLANETS[key];
+   const key=planetPick==='auto'?pickPlanet(albumRGB):planetPick,P=PLANETS[key];
    if(key===this.pk&&!force)return;this.pk=key;
    $('olyr').style.setProperty('--glow',P.atmo);
    $('pname').innerHTML=`<i style="--pc:${P.atmo}"></i>${P.name}`;
@@ -987,6 +994,15 @@ $('fw').oninput=e=>{fontW=e.target.value;applyFont()};
 $('fwr').onclick=e=>{e.stopPropagation();fontW=null;applyFont()};
 $('stylebox').addEventListener('click',e=>e.stopPropagation());
 applyFont();
+/* planet picker (Orbit) */
+const PSW={auto:'conic-gradient(#c1440e,#e3c56b,#3d6fb6,#9fdde4,#3f54ba,#c1440e)',mercury:'radial-gradient(circle at 35% 30%,#bdb7ae,#5c5852)',venus:'radial-gradient(circle at 35% 30%,#f6e6b8,#c9a35e)',
+ earth:'radial-gradient(circle at 35% 30%,#8fd0ff,#2a6fc9 45%,#2f6b2c)',mars:'radial-gradient(circle at 35% 30%,#f09060,#a2401c)',jupiter:'repeating-linear-gradient(170deg,#efe2c9 0 4px,#c48a5a 4px 7px,#a8653c 7px 9px)',
+ saturn:'radial-gradient(circle at 35% 30%,#f6e2a6,#bf9a58)',uranus:'radial-gradient(circle at 35% 30%,#c8f3f5,#4aa3b5)',neptune:'radial-gradient(circle at 35% 30%,#7d9bff,#2c44a8)'};
+let planetPick=store.get('ll_planet')||'auto';
+$('prow').innerHTML=['auto',...Object.keys(PLANETS)].map(k=>`<button class="ft" data-p="${k}" aria-label="${k==='auto'?'Auto':PLANETS[k].name}"><i style="background:${PSW[k]}"></i><small>${k==='auto'?'Auto':PLANETS[k].name}</small></button>`).join('');
+const markPlanet=()=>document.querySelectorAll('[data-p]').forEach(b=>b.classList.toggle('on',b.dataset.p===planetPick));
+document.querySelectorAll('[data-p]').forEach(b=>b.onclick=e=>{e.stopPropagation();planetPick=b.dataset.p;store.set('ll_planet',planetPick);markPlanet();if(style==='orbit')R_.orbit.planet(true)});
+markPlanet();
 
 const WICON={
  person:'<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4.2" fill="#0a84ff"/><path d="M3.5 21c.8-4.4 4.2-7 8.5-7s7.7 2.6 8.5 7z" fill="#0a84ff"/></svg>',
