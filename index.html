@@ -166,8 +166,6 @@ body:not(.s-chat) .empty{z-index:3;inset:0}
 @media(max-width:560px){.stylebox{grid-template-columns:repeat(2,minmax(0,160px))}}
 .fsec{display:none}
 body.s-lock .fsec{display:block}
-.psec{display:none;grid-column:1/-1;border-top:.5px solid rgba(255,255,255,.14);margin-top:4px;padding-top:10px}
-body.s-orbit .psec{display:block}
 .ft i{display:block;width:26px;height:26px;border-radius:50%;box-shadow:inset -5px -4px 8px rgba(0,0,0,.45),0 0 8px rgba(255,255,255,.08)}
 .fsec{grid-column:1/-1;border-top:.5px solid rgba(255,255,255,.14);margin-top:4px;padding-top:10px}
 .fhd{display:flex;align-items:baseline;gap:8px;margin:0 2px 8px;font-size:13px}.fhd span{font-size:11px;opacity:.55}
@@ -226,7 +224,33 @@ body.s-orbit .psec{display:block}
 .pcv{position:absolute;left:0;top:0;width:100%;height:42%;border-radius:50% 50% 0 0/100% 100% 0 0;opacity:0;transition:opacity 1.2s}
 .pcv.on{opacity:1}
 .rings{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-.pname{position:absolute;left:4%;top:6%;font:600 12px Inter,system-ui,sans-serif;letter-spacing:.06em;opacity:.7;display:flex;align-items:center;gap:7px}
+.ssys{position:absolute;left:3.2%;top:4.6%;z-index:4}
+.pname{border:0;background:rgba(255,255,255,0);color:#fff;font:600 12px Inter,system-ui,sans-serif;letter-spacing:.06em;opacity:.75;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:12px;cursor:pointer;transition:background .25s,opacity .25s}
+.pname em{font-style:normal;font-weight:500;opacity:.5;letter-spacing:0}
+.ssys:hover .pname,.ssys.open .pname{opacity:1;background:rgba(255,255,255,.08)}
+.sspanel{position:absolute;left:0;top:calc(100% + 6px);width:236px;height:236px;border-radius:28px;
+ background:rgba(30,30,36,.5);backdrop-filter:blur(26px) saturate(170%);-webkit-backdrop-filter:blur(26px) saturate(170%);border:.5px solid rgba(255,255,255,.16);box-shadow:0 24px 60px rgba(0,0,0,.55),inset 0 .5px 0 rgba(255,255,255,.18);
+ transform-origin:12% 0;transform:scale(.55) translateY(-10px);opacity:0;filter:blur(8px);visibility:hidden;pointer-events:none;
+ transition:opacity .2s ease,filter .25s ease,transform .45s var(--soft),visibility 0s .45s}
+.ssys:hover .sspanel,.ssys.open .sspanel{opacity:1;filter:none;transform:none;visibility:visible;pointer-events:auto;transition:opacity .22s ease,filter .3s ease,transform .7s var(--spring),visibility 0s}
+.ssys::after{content:"";position:absolute;left:0;top:100%;width:236px;height:8px}
+.sorb{position:absolute;left:50%;top:50%;border-radius:50%;border:1px solid rgba(255,255,255,.09);transform:translate(-50%,-50%);pointer-events:none}
+.spin{position:absolute;inset:0;animation:spin2 var(--d) linear infinite;animation-play-state:paused;pointer-events:none}
+.ssys:hover .spin,.ssys.open .spin{animation-play-state:running}
+.sp{position:absolute;left:50%;top:50%;width:var(--s);height:var(--s);margin:calc(var(--s)/-2) 0 0 calc(var(--s)/-2);transform:translateX(var(--r)) ;pointer-events:auto}
+.sp button{width:100%;height:100%;border:0;padding:0;border-radius:50%;cursor:pointer;background:var(--bg);box-shadow:inset -3px -2px 5px rgba(0,0,0,.5);
+ transform:scale(0);transition:transform .35s ease,box-shadow .2s;position:relative}
+.ssys:hover .sp button,.ssys.open .sp button{transform:scale(1);transition:transform .6s var(--spring),box-shadow .2s;transition-delay:var(--dl)}
+.sp button:hover{transform:scale(1.35)!important;transition-delay:0s!important}
+.sp button::before{content:"";position:absolute;inset:-7px;border-radius:50%}
+.sp button.on{box-shadow:inset -3px -2px 5px rgba(0,0,0,.5),0 0 0 2px #fff,0 0 12px rgba(255,255,255,.6)}
+.sp.ring button::after{content:"";position:absolute;left:-55%;right:-55%;top:38%;height:24%;border-radius:50%;border:1.5px solid rgba(240,220,170,.75);transform:rotate(-18deg)}
+.ssun{position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border:0;border-radius:50%;cursor:pointer;
+ background:radial-gradient(circle at 40% 38%,#fff6d0,#ffc24a 45%,#ff7a1a);box-shadow:0 0 18px rgba(255,170,60,.85),0 0 40px rgba(255,140,40,.4);transform:scale(0);transition:transform .35s ease}
+.ssys:hover .ssun,.ssys.open .ssun{transform:scale(1);transition:transform .6s var(--spring)}
+.ssun:hover{transform:scale(1.15)!important}
+.ssun.on{box-shadow:0 0 0 2px #fff,0 0 18px rgba(255,170,60,.85),0 0 40px rgba(255,140,40,.4)}
+.slab{position:absolute;left:0;right:0;bottom:12px;text-align:center;font:500 11px Inter,system-ui,sans-serif;color:rgba(255,255,255,.7);pointer-events:none;transition:opacity .2s}
 .pname i{width:9px;height:9px;border-radius:50%;background:var(--pc,#8ab);box-shadow:0 0 10px var(--pc,#8ab)}
 @keyframes prot{to{transform:rotate(360deg)}}
 .disc{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:clamp(96px,18%,160px);aspect-ratio:1}
@@ -437,10 +461,6 @@ body.s-player .empty{display:none!important}
   <div class="fhd"><b>Lock Screen font</b><span>Clock and lyrics</span></div>
   <div class="frow" id="frow"></div>
   <div class="wrow"><span style="font-weight:300">A</span><input type="range" id="fw" min="300" max="900" step="100" aria-label="Font weight"><span style="font-weight:900">A</span><button class="wreset" id="fwr">Auto</button></div>
- </div>
- <div class="psec">
-  <div class="fhd"><b>Planet</b><span>Auto matches the album colours</span></div>
-  <div class="frow" id="prow"></div>
  </div>
 </div>
 
@@ -901,7 +921,7 @@ const R_={
  orbit:{
   mount(){
    view.className='view';view.style.background='';
-   view.innerHTML=`<div class="osky">${twinkles(90,7)}</div><canvas class="pgl" id="pgl"></canvas><div class="pname" id="pname"></div><div class="credit" id="credit"></div>
+   view.innerHTML=`<div class="osky">${twinkles(90,7)}</div><canvas class="pgl" id="pgl"></canvas><div class="ssys" id="ssys"><button class="pname" id="pname"></button><div class="sspanel" id="sspanel">${solarHTML()}</div></div><div class="credit" id="credit"></div>
     <div class="disc" id="disc"><canvas id="viz"></canvas><div class="rec"></div></div>
     <div class="olyr" id="olyr"></div><div class="clock" id="clock"></div>
     <div class="npc"><i></i><div><b>NOW PLAYING</b>${esc($('title').textContent)}<br><span style="opacity:.55">${esc($('artist').textContent)}</span></div></div>`;
@@ -922,7 +942,7 @@ const R_={
    const key=planetPick==='auto'?pickPlanet(albumRGB):planetPick,P=PLANETS[key];
    if(key===this.pk&&!force)return;this.pk=key;
    $('olyr').style.setProperty('--glow',P.atmo);
-   $('pname').innerHTML=`<i style="--pc:${P.atmo}"></i>${P.name}`;
+   $('pname').innerHTML=`<i style="--pc:${P.atmo}"></i>${P.name}${planetPick==='auto'?' <em>Auto</em>':''}`;bindSolar();
    cv.classList.remove('on');
    const gl=this.gl;
    Promise.all([loadPlanetTex(key),new Promise(r=>setTimeout(r,cv.dataset.k?700:0))]).then(([t])=>{
@@ -999,10 +1019,26 @@ const PSW={auto:'conic-gradient(#c1440e,#e3c56b,#3d6fb6,#9fdde4,#3f54ba,#c1440e)
  earth:'radial-gradient(circle at 35% 30%,#8fd0ff,#2a6fc9 45%,#2f6b2c)',mars:'radial-gradient(circle at 35% 30%,#f09060,#a2401c)',jupiter:'repeating-linear-gradient(170deg,#efe2c9 0 4px,#c48a5a 4px 7px,#a8653c 7px 9px)',
  saturn:'radial-gradient(circle at 35% 30%,#f6e2a6,#bf9a58)',uranus:'radial-gradient(circle at 35% 30%,#c8f3f5,#4aa3b5)',neptune:'radial-gradient(circle at 35% 30%,#7d9bff,#2c44a8)'};
 let planetPick=store.get('ll_planet')||'auto';
-$('prow').innerHTML=['auto',...Object.keys(PLANETS)].map(k=>`<button class="ft" data-p="${k}" aria-label="${k==='auto'?'Auto':PLANETS[k].name}"><i style="background:${PSW[k]}"></i><small>${k==='auto'?'Auto':PLANETS[k].name}</small></button>`).join('');
+const SOLAR=[['mercury',30,7,48],['venus',43,9,75],['earth',56,9.5,100],['mars',68,8,130],['jupiter',82,15,190],['saturn',96,13,240],['uranus',106,10,300],['neptune',114,10,360]];
+function solarHTML(){
+ return SOLAR.map(([k,r])=>`<div class="sorb" style="width:${r*2}px;height:${r*2}px"></div>`).join('')+
+  `<button class="ssun" data-p="auto" aria-label="Auto (match the album)"></button>`+
+  SOLAR.map(([k,r,sz,d],i)=>{const st=-((hash(k)%360)/360)*d;
+   return `<div class="spin" style="--d:${d}s;animation-delay:${st}s"><div class="sp${k==='saturn'?' ring':''}" style="--r:${r}px;--s:${sz}px"><button data-p="${k}" aria-label="${PLANETS[k].name}" style="--bg:${PSW[k]};--dl:${(.04+i*.035).toFixed(3)}s"></button></div></div>`}).join('')+
+  `<div class="slab" id="slab">Tap a planet · sun = Auto</div>`;
+}
 const markPlanet=()=>document.querySelectorAll('[data-p]').forEach(b=>b.classList.toggle('on',b.dataset.p===planetPick));
-document.querySelectorAll('[data-p]').forEach(b=>b.onclick=e=>{e.stopPropagation();planetPick=b.dataset.p;store.set('ll_planet',planetPick);markPlanet();if(style==='orbit')R_.orbit.planet(true)});
-markPlanet();
+document.addEventListener('click',e=>{const y=$('ssys');if(y&&!e.target.closest('#ssys'))y.classList.remove('open')});
+function bindSolar(){
+ const sy=$('ssys');if(!sy||sy.dataset.b)return;sy.dataset.b=1;
+ $('pname').onclick=e=>{e.stopPropagation();sy.classList.toggle('open')};
+ sy.querySelectorAll('[data-p]').forEach(b=>{
+  b.onclick=e=>{e.stopPropagation();planetPick=b.dataset.p;store.set('ll_planet',planetPick);markPlanet();R_.orbit.planet(true);if(matchMedia('(hover:none)').matches)setTimeout(()=>sy.classList.remove('open'),500)};
+  b.onmouseenter=()=>{$('slab').textContent=b.dataset.p==='auto'?'Auto — match the album':PLANETS[b.dataset.p].name};
+  b.onmouseleave=()=>{$('slab').textContent='Tap a planet · sun = Auto'};
+ });
+ markPlanet();
+}
 
 const WICON={
  person:'<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4.2" fill="#0a84ff"/><path d="M3.5 21c.8-4.4 4.2-7 8.5-7s7.7 2.6 8.5 7z" fill="#0a84ff"/></svg>',
