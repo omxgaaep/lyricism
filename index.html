@@ -1914,16 +1914,36 @@ function hangul(text){
  return out.join('').replace(/\s+/g,' ').trim();
 }
 let romLibs={};
+/* Japanese needs an 18 MB dictionary (~220 MB of memory), so it runs in a background worker, and only on computers */
+const isMobile=()=>/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const canJapanese=()=>!isMobile()&&(navigator.deviceMemory==null||navigator.deviceMemory>=4)&&typeof Worker!=='undefined';
+const JP_WORKER=`importScripts('https://cdn.jsdelivr.net/npm/kuroshiro@1.2.1/dist/kuroshiro.min.js','https://cdn.jsdelivr.net/npm/kuroshiro-analyzer-kuromoji@1.1.0/dist/kuroshiro-analyzer-kuromoji.min.js');
+let k;const ready=(async()=>{const K=self.Kuroshiro.default||self.Kuroshiro,A=self.KuromojiAnalyzer.default||self.KuromojiAnalyzer;k=new K();await k.init(new A({dictPath:'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/'}))})();
+onmessage=async e=>{try{await ready;const out=[];for(const t of e.data.lines)out.push(t?await k.convert(t,{to:'romaji',mode:'spaced',romajiSystem:'hepburn'}):t);postMessage({id:e.data.id,out})}catch(err){postMessage({id:e.data.id,err:String(err&&err.message||err)})}};`;
+let jpW=null,jpSeq=0;
+function jpBatch(lines){
+ return new Promise((ok,no)=>{
+  try{if(!jpW)jpW=new Worker(URL.createObjectURL(new Blob([JP_WORKER],{type:'text/javascript'})))}catch(e){no(e);return}
+  const id=++jpSeq,to=setTimeout(()=>{cleanup();try{jpW.terminate()}catch(e){}jpW=null;no(new Error('timeout'))},60000);
+  const onMsg=e=>{if(e.data.id!==id)return;cleanup();e.data.err?no(new Error(e.data.err)):ok(e.data.out.map(x=>x.replace(/\s+/g,' ').replace(/ ([,.!?])/g,'$1').trim()))};
+  const onErr=()=>{cleanup();try{jpW.terminate()}catch(e){}jpW=null;no(new Error('worker'))};
+  function cleanup(){clearTimeout(to);jpW&&jpW.removeEventListener('message',onMsg);jpW&&jpW.removeEventListener('error',onErr)}
+  jpW.addEventListener('message',onMsg);jpW.addEventListener('error',onErr);jpW.postMessage({id,lines});
+ });
+}
+const romCacheKey=n=>'ll_romc_'+n;
+function romCacheGet(name){try{return JSON.parse(localStorage.getItem(romCacheKey(name))||'null')}catch(e){return null}}
+function romCacheSet(name,out){try{const idx=JSON.parse(localStorage.getItem('ll_romc_idx')||'[]').filter(x=>x!==name);idx.push(name);while(idx.length>40)localStorage.removeItem(romCacheKey(idx.shift()));
+ localStorage.setItem('ll_romc_idx',JSON.stringify(idx));localStorage.setItem(romCacheKey(name),JSON.stringify(out))}catch(e){}}
 function loadScript(src){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s)})}
 async function romaniser(lang){
  if(lang==='Korean')return t=>hangul(t);
  if(lang==='Chinese'){if(!romLibs.py)romLibs.py=loadScript('https://cdn.jsdelivr.net/npm/pinyin-pro@3.29.5/dist/index.js');await romLibs.py;const m=window.pinyinPro;
   return t=>m.pinyin(t,{toneType:'symbol',nonZh:'consecutive'}).replace(/\s+/g,' ').trim()}
  if(lang==='Japanese'){
-  if(!romLibs.jp)romLibs.jp=(async()=>{await loadScript('https://cdn.jsdelivr.net/npm/kuroshiro@1.2.1/dist/kuroshiro.min.js');await loadScript('https://cdn.jsdelivr.net/npm/kuroshiro-analyzer-kuromoji@1.1.0/dist/kuroshiro-analyzer-kuromoji.min.js');
-   const K=window.Kuroshiro.default||window.Kuroshiro,A=window.KuromojiAnalyzer.default||window.KuromojiAnalyzer,k=new K();await k.init(new A({dictPath:'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/'}));return k})();
-  const k=await romLibs.jp;const ha=await romaniser('Korean');   // songs often mix in Korean/Latin
-  return async t=>(await k.convert(t,{to:'romaji',mode:'spaced',romajiSystem:'hepburn'})).replace(/\s+/g,' ').replace(/ ([,.!?])/g,'$1').trim()}
+  if(!canJapanese())throw new Error('jp-device');
+  return {batch:jpBatch};
+ }
  if(!romLibs.aa)romLibs.aa=import('https://cdn.jsdelivr.net/npm/any-ascii@0.3.3/any-ascii.js');const m=await romLibs.aa;const f=m.default||m.anyAscii;
  return t=>f(t).replace(/\s+/g,' ').trim();
 }
@@ -1932,9 +1952,22 @@ async function romaniseSong(name){
  const all=lines.map(l=>l.text).join('\n');if(!NONLATIN.test(all))return;
  const lang=scriptOf(all);romLang=lang;$('romBtn').hidden=false;$('romBtn').classList.toggle('on',romOn);
  if(romOn)$('status').textContent=`Romanising ${lang} lyrics…`;
- let f;try{f=await romaniser(lang)}catch(e){if(track.name===name)$('status').textContent='Couldn\'t load the romaniser. Check your connection';return}
- const out=[];for(const l of lines){if(track.name!==name)return;let r=l.text;if(r&&NONLATIN.test(r)){try{r=await f(r)}catch(e){}}out.push(r)}
- if(track.name!==name)return;
+ const cacheName=(track.key||name)+'|'+lines.length;
+ let out=romCacheGet(cacheName);
+ if(!out||out.length!==lines.length){
+  try{
+   const f=await romaniser(lang);
+   if(f&&f.batch){out=await f.batch(lines.map(l=>l.text&&NONLATIN.test(l.text)?l.text:''));out=out.map((r,i)=>r||lines[i].text)}
+   else{out=[];for(const l of lines){if(track.name!==name)return;let r=l.text;if(r&&NONLATIN.test(r)){try{r=await f(r)}catch(e){}}out.push(r);await new Promise(r=>setTimeout(r))}}
+  }catch(e){
+   if(track.name!==name)return;
+   $('status').textContent=e.message==='jp-device'?'Japanese romanisation needs a computer. Showing the original lyrics':'Couldn\'t romanise this song. Showing the original lyrics';
+   if(e.message==='jp-device')$('romBtn').hidden=true;
+   return;
+  }
+  if(track.name!==name)return;
+  romCacheSet(cacheName,out);
+ }
  lines.forEach((l,i)=>{l.orig=l.text;l.origWt=l.wt;l.rom=out[i]});romReady=true;
  applyRom();
 }
