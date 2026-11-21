@@ -1511,16 +1511,22 @@ function sdkLoad(){return new Promise((ok,no)=>{
  window.onSpotifyWebPlaybackSDKReady=ok;
  const sc=document.createElement('script');sc.src='https://sdk.scdn.co/spotify-player.js';sc.onerror=()=>no(new Error('load'));document.head.appendChild(sc);
 })}
+let sdkStarting=false;
+// load Spotify's player script early, so tapping the speaker can unlock sound straight away (browsers only allow it during a tap)
+function sdkPreload(){if(store.get('ll_scope')===SCOPES&&!window.Spotify)sdkLoad().catch(()=>{})}
 async function playHere(){
  if(mode!=='spotify'){$('status').textContent='Connect Spotify first';return}
+ if(sdkStarting)return;
  if(sdk){sdk.disconnect();sdk=null;sdkDevice=null;sdkActive=false;$('here').classList.remove('on');$('status').textContent='Stopped playing in Lyricism';return}
  if(store.get('ll_scope')!==SCOPES){store.set('ll_wantPlayer','1');$('status').textContent='One-time re-login to allow playing here…';setTimeout(()=>login(store.get('ll_cid')||BUILTIN_CID),900);return}
+ sdkStarting=true;
  $('status').textContent='Starting the Lyricism player…';
- try{await sdkLoad()}catch(e){$('status').textContent='Could not load Spotify\'s player — check your connection';return}
+ if(!window.Spotify){try{await sdkLoad()}catch(e){sdkStarting=false;$('status').textContent='Could not load Spotify\'s player — check your connection';return}}
  const p=new Spotify.Player({name:'Lyricism',getOAuthToken:cb=>token().then(t=>cb(t)),volume:.8});
  p.addListener('initialization_error',()=>{$('status').textContent='This browser can\'t play Spotify here — in Brave, allow "Google Widevine" in settings, then try again'});
  p.addListener('authentication_error',()=>{store.del('ll_scope');$('status').textContent='Spotify needs you to log in again — tap the speaker button'});
  p.addListener('account_error',()=>{$('status').textContent='Playing in Lyricism needs Spotify Premium — use Spotify itself instead';p.disconnect();sdk=null;$('here').classList.remove('on')});
+ p.addListener('autoplay_failed',()=>{$('status').textContent='Your browser blocked the sound. Tap play to start it'});
  p.addListener('playback_error',e=>{$('status').textContent='Playback error: '+(e.message||'unknown')});
  p.addListener('ready',async({device_id})=>{
   sdkDevice=device_id;$('here').classList.add('on');
@@ -1536,10 +1542,11 @@ async function playHere(){
   const ct=st.track_window&&st.track_window.current_track;
   if(ct)onTrack({id:ct.id,name:ct.name,duration_ms:st.duration||ct.duration_ms,artists:ct.artists,album:ct.album});
  });
- p.activateElement&&p.activateElement();
- const ok=await p.connect();sdk=p;
- if(!ok){$('status').textContent='Couldn\'t start the player';sdk=null}
+ try{p.activateElement&&p.activateElement()}catch(e){}   // must run before any await when the script was preloaded
+ const ok=await p.connect();sdk=ok?p:null;sdkStarting=false;
+ if(!ok)$('status').textContent='Couldn\'t start the player';
 }
+addEventListener('pagehide',()=>{try{sdk&&sdk.disconnect()}catch(e){}});
 $('here').onclick=playHere;
 
 let pollTimer=null,polling=false;
@@ -1550,7 +1557,8 @@ async function poll(){
   const t0=performance.now();
   const r=await api('/me/player/currently-playing');
   const half=(performance.now()-t0)/2;
-  if(r.status===204||!r.ok){$('status').textContent=r.status===204?'Nothing playing on Spotify':'Spotify error '+r.status;if(base.playing)setPlaying(false)}
+  if(sdk&&sdkActive&&(r.status===204||!r.ok)){/* the in-app player is the source of truth; the server can lag right after a transfer */}
+  else if(r.status===204||!r.ok){$('status').textContent=r.status===204?'Nothing playing on Spotify':'Spotify error '+r.status;if(base.playing)setPlaying(false)}
   else{
    const j=await r.json(),it=j.item;
    if(it&&it.type==='track'&&performance.now()>lockUntil){
@@ -1569,7 +1577,7 @@ async function poll(){
 }
 const pollSoon=ms=>{clearTimeout(pollTimer);pollTimer=setTimeout(poll,ms)};
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&mode==='spotify')pollSoon(0)});
-function startSpotify(){mode='spotify';$('connect').textContent='Log out';$('connect').classList.add('out');track={id:null,dur:0,name:''};pollSoon(0)}
+function startSpotify(){setTimeout(sdkPreload,1500);mode='spotify';$('connect').textContent='Log out';$('connect').classList.add('out');track={id:null,dur:0,name:''};pollSoon(0)}
 
 async function control(action){
  if(mode==='guest'){$('status').textContent='Only the person sharing can control the music';return}
@@ -1580,7 +1588,7 @@ async function control(action){
  }
  if(mode!=='spotify')return;
  if(sdk&&sdkActive){
-  if(action==='toggle'){setPlaying(!base.playing);sdk.togglePlay()}else if(action==='next')sdk.nextTrack();else sdk.previousTrack();
+  if(action==='toggle'){setPlaying(!base.playing);try{sdk.activateElement&&sdk.activateElement()}catch(e){}sdk.togglePlay()}else if(action==='next')sdk.nextTrack();else sdk.previousTrack();
   return;
  }
  const playing=base.playing;
