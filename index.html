@@ -569,7 +569,8 @@ const $=id=>document.getElementById(id);
 const store={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
 const REDIRECT=location.origin+location.pathname.replace(/index\.html$/,'');
 const BUILTIN_CID='f0c7f71a532c47a49356e22129ee182a';   // the app owner's Spotify app — friends just log in
-const SCOPES='user-read-currently-playing user-read-playback-state user-modify-playback-state streaming user-read-email user-read-private';
+const SCOPES='user-read-currently-playing user-read-playback-state user-modify-playback-state streaming user-read-email user-read-private user-top-read playlist-read-private';
+const hasPlayerScope=()=>/\bstreaming\b/.test(store.get('ll_scope')||'');
 const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const ICON_PLAY='<svg width="20" height="20" viewBox="0 0 24 24"><path d="M7 4v16l13-8z" fill="currentColor"/></svg>';
 const ICON_PAUSE='<svg width="20" height="20" viewBox="0 0 24 24"><path d="M6 4h4v16H6zM14 4h4v16h-4z" fill="currentColor"/></svg>';
@@ -1456,11 +1457,11 @@ async function loadLyrics(name,artist,album,durMs){
 
 /* ---------- Spotify auth (PKCE) ---------- */
 const b64u=buf=>btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-async function login(cid){
+async function login(cid,state){
  const v=b64u(crypto.getRandomValues(new Uint8Array(48)));
  const ch=b64u(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v)));
  store.set('ll_verifier',v);store.set('ll_cid',cid);
- location.href='https://accounts.spotify.com/authorize?'+new URLSearchParams({response_type:'code',client_id:cid,scope:SCOPES,code_challenge_method:'S256',code_challenge:ch,redirect_uri:REDIRECT});
+ location.href='https://accounts.spotify.com/authorize?'+new URLSearchParams({response_type:'code',client_id:cid,scope:SCOPES,code_challenge_method:'S256',code_challenge:ch,redirect_uri:REDIRECT,...(state?{state}:{})});
 }
 async function tokenReq(body){
  const r=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams(body)});
@@ -1513,12 +1514,12 @@ function sdkLoad(){return new Promise((ok,no)=>{
 })}
 let sdkStarting=false;
 // load Spotify's player script early, so tapping the speaker can unlock sound straight away (browsers only allow it during a tap)
-function sdkPreload(){if(store.get('ll_scope')===SCOPES&&!window.Spotify)sdkLoad().catch(()=>{})}
+function sdkPreload(){if(hasPlayerScope()&&!window.Spotify)sdkLoad().catch(()=>{})}
 async function playHere(){
  if(mode!=='spotify'){$('status').textContent='Connect Spotify first';return}
  if(sdkStarting)return;
  if(sdk){sdk.disconnect();sdk=null;sdkDevice=null;sdkActive=false;$('here').classList.remove('on');$('status').textContent='Stopped playing in Lyricism';return}
- if(store.get('ll_scope')!==SCOPES){store.set('ll_wantPlayer','1');$('status').textContent='One-time re-login to allow playing here…';setTimeout(()=>login(store.get('ll_cid')||BUILTIN_CID),900);return}
+ if(!hasPlayerScope()){store.set('ll_wantPlayer','1');$('status').textContent='One-time re-login to allow playing here…';setTimeout(()=>login(store.get('ll_cid')||BUILTIN_CID),900);return}
  sdkStarting=true;
  $('status').textContent='Starting the Lyricism player…';
  if(!window.Spotify){try{await sdkLoad()}catch(e){sdkStarting=false;$('status').textContent='Could not load Spotify\'s player — check your connection';return}}
@@ -1866,10 +1867,11 @@ $('gplay').onclick=()=>{playAlong=!playAlong;$('gplay').classList.toggle('on',pl
 /* ---------- boot ---------- */
 (async()=>{
  const p=new URLSearchParams(location.search);
+ if(p.get('login')==='guess'){login(store.get('ll_cid')||BUILTIN_CID,'guess');return}
  if(p.get('join')){startGuest(p.get('join').replace(/[^a-z0-9]/gi,'').slice(0,16))}
  else if(p.get('code')){
   history.replaceState(null,'',REDIRECT);
-  try{await tokenReq({grant_type:'authorization_code',code:p.get('code'),redirect_uri:REDIRECT,client_id:store.get('ll_cid'),code_verifier:store.get('ll_verifier')});store.set('ll_scope',SCOPES);startSpotify();if(store.get('ll_wantPlayer')){store.del('ll_wantPlayer');$('status').textContent='Logged in again. Tap the speaker button to play music here.'}}
+  try{await tokenReq({grant_type:'authorization_code',code:p.get('code'),redirect_uri:REDIRECT,client_id:store.get('ll_cid'),code_verifier:store.get('ll_verifier')});store.set('ll_scope',SCOPES);if(p.get('state')==='guess'){location.replace(REDIRECT+'guess/');return}startSpotify();if(store.get('ll_wantPlayer')){store.del('ll_wantPlayer');$('status').textContent='Logged in again. Tap the speaker button to play music here.'}}
   catch(e){$('status').textContent='Login failed: '+e.message}
  }else if(p.get('error')){history.replaceState(null,'',REDIRECT);$('status').textContent='Spotify login cancelled'}
  else if(store.get('ll_refresh'))startSpotify();
