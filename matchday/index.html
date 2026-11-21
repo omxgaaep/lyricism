@@ -130,6 +130,20 @@ td:nth-child(2){text-align:left;display:flex;align-items:center;gap:8px;font-wei
 td img{width:18px;height:18px;object-fit:contain}
 tr.us td{background:linear-gradient(90deg,rgba(0,77,152,.45),rgba(165,0,68,.35));color:#fff}
 tr.us td:first-child{border-radius:10px 0 0 10px}tr.us td:last-child{border-radius:0 10px 10px 0}
+#tseg{flex-wrap:wrap;justify-content:flex-end}
+.tblwrap{max-height:560px;overflow:auto;margin:0 -4px;padding:0 4px}
+td.zone{position:relative}td.zone::before{content:"";position:absolute;left:0;top:6px;bottom:6px;width:3px;border-radius:2px;background:var(--z)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:11px;color:var(--dim)}.legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;background:var(--z)}
+.ldr{display:grid;grid-template-columns:26px 30px minmax(0,1fr) auto;align-items:center;gap:10px;padding:8px 6px;border-top:.5px solid var(--line);animation:rise .45s var(--soft) both}
+.ldr:first-child{border-top:0}
+.ldr .rk{font:700 15px 'Barlow Condensed';color:var(--dim);text-align:center}
+.ldr .nm b{display:block;font-size:14px}.ldr .nm small{color:var(--dim);font-size:11.5px}
+.ldr .val{font:700 24px 'Barlow Condensed';font-variant-numeric:tabular-nums}
+.ldr img{width:26px;height:26px;object-fit:contain}
+.ldr.us{background:linear-gradient(90deg,rgba(0,77,152,.4),rgba(165,0,68,.3));border-radius:12px;border-top-color:transparent}
+.ptag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.04em;color:#111;background:var(--gold);border-radius:6px;padding:2px 6px;margin-left:6px;vertical-align:2px}
+.pl.doubt i{opacity:.6;border-style:dashed}
+.pnote{font-size:11.5px;color:var(--dim);margin-top:8px;line-height:1.5}
 .foot{margin-top:24px;text-align:center;font-size:11.5px;color:rgba(255,255,255,.4)}
 .foot a{color:inherit}
 .err{padding:18px;text-align:center;color:var(--dim)}
@@ -159,10 +173,10 @@ tr.us td:first-child{border-radius:10px 0 0 10px}tr.us td:last-child{border-radi
    <section class="card" style="padding:20px"><h2>Stats <small id="stsub"></small></h2><div id="stats"><div class="empty">Stats appear once a match starts.</div></div></section>
   </div>
   <div class="col">
-   <section class="card" style="padding:20px"><h2>Lineups <span class="seg" id="lseg"><button data-s="us" class="on">Barça</button><button data-s="them">Opponent</button></span></h2><div id="lineup"><div class="empty">Lineups usually appear about an hour before kick-off.</div></div></section>
+   <section class="card" style="padding:20px"><h2><span id="lhead">Lineups</span> <span class="seg" id="lseg"><button data-s="us" class="on">Barça</button><button data-s="them">Opponent</button></span></h2><div id="lineup"><div class="empty">Lineups usually appear about an hour before kick-off.</div></div></section>
   </div>
   <section class="card" style="padding:20px"><h2>Fixtures &amp; results <small>tap a match for details</small></h2><div class="list" id="fx"></div></section>
-  <section class="card" style="padding:20px"><h2>LaLiga table</h2><div id="table"><div class="empty">Loading…</div></div></section>
+  <section class="card" style="padding:20px"><h2>LaLiga <span class="seg" id="tseg"><button data-t="table" class="on">Table</button></span></h2><div id="table"><div class="empty">Loading…</div></div></section>
  </main>
  <p class="foot">Data from ESPN · Times shown in your time zone · Not affiliated with FC Barcelona · <a href="../">Lyricism</a></p>
 </div>
@@ -267,23 +281,58 @@ function rowOf(pos){const p=(pos||'').toUpperCase();
  if(/^(AM)/.test(p))return 4;
  return 5}
 const lr=pos=>{const p=(pos||'').toUpperCase();return /^L/.test(p)?0:/-L$/.test(p)?1:/^R/.test(p)?4:/-R$/.test(p)?3:2};
+let prediction=null;   // {us:{team,xi,formation,out,n},them:{...}} for the selected upcoming match
 function renderLineup(sum){
- const rs=sum?.rosters||[];const r=rs.find(x=>(String(x.team?.id)===TEAM)===(side==='us'));
- const starters=(r?.roster||[]).filter(p=>p.starter);
- if(!r||starters.length<11){$('lineup').innerHTML='<div class="empty">Lineups usually appear about an hour before kick-off.</div>';return}
- const rows=[[],[],[],[],[],[]];starters.forEach(p=>rows[rowOf(p.position?.abbreviation)].push(p));
+ const rs=sum?.rosters||[];let r=rs.find(x=>(String(x.team?.id)===TEAM)===(side==='us'));
+ let starters=(r?.roster||[]).filter(p=>p.starter),pred=null;
+ if((!r||starters.length<11)&&prediction&&prediction[side]){pred=prediction[side];r={team:pred.team,formation:pred.formation,roster:pred.xi};starters=pred.xi}
+ $('lhead').innerHTML=pred?'Predicted lineup<span class="ptag">PREDICTED</span>':'Lineups';
+ if(!r||starters.length<11){$('lineup').innerHTML=`<div class="empty">${prediction===false?'Working out a predicted lineup…':'Lineups usually appear about an hour before kick-off.'}</div>`;return}
+ const rows=[[],[],[],[],[],[]];starters.slice(0,11).forEach(p=>rows[rowOf(p.position?.abbreviation)].push(p));
  const used=rows.filter(x=>x.length);
  used.forEach(row=>row.sort((a,b)=>lr(a.position?.abbreviation)-lr(b.position?.abbreviation)||(+a.formationPlace||0)-(+b.formationPlace||0)));
  const n=used.length;
  const dots=used.map((row,ri)=>{const y=92-ri*(80/(n-1||1));return row.map((p,i)=>{const x=(i+1)*100/(row.length+1);
   const nm=p.athlete?.shortName||p.athlete?.displayName||'';const off=p.subbedOut;
-  return `<div class="pl ${side==='us'?'':'opp'}" style="left:${x}%;top:${y}%;animation-delay:${(ri*4+i)*35}ms"><i>${esc(p.jersey||'')}</i>${off?'<b class="sub">↓</b>':''}<span>${esc(nm.split(' ').slice(-1)[0])}</span></div>`}).join('')}).join('');
+  return `<div class="pl ${side==='us'?'':'opp'} ${p.conf!=null&&p.conf<.45?'doubt':''}" style="left:${x}%;top:${y}%;animation-delay:${(ri*4+i)*35}ms" title="${p.conf!=null?Math.round(p.conf*100)+'% of recent starts':''}"><i>${esc(p.jersey||'')}</i>${off?'<b class="sub">↓</b>':''}<span>${esc(nm.split(' ').slice(-1)[0])}</span></div>`}).join('')}).join('');
  const bench=(r.roster||[]).filter(p=>!p.starter).map(p=>`${esc(p.jersey||'')} ${esc(p.athlete?.shortName||p.athlete?.displayName||'')}${p.subbedIn?' ↑':''}`).join(' · ');
  $('lineup').innerHTML=`<div class="pitch"><svg viewBox="0 0 68 80" preserveAspectRatio="none" fill="none" stroke="rgba(255,255,255,.45)" stroke-width=".4">
    <rect x="2" y="2" width="64" height="76"/><line x1="2" y1="40" x2="66" y2="40"/><circle cx="34" cy="40" r="8"/><rect x="18" y="64" width="32" height="14"/><rect x="26" y="72" width="16" height="6"/><rect x="18" y="2" width="32" height="14"/><rect x="26" y="2" width="16" height="6"/></svg>${dots}</div>
-  <div class="form"><span>${esc(r.team?.displayName||'')}</span><span>${esc(r.formation||'')}</span></div>${bench?`<div class="bench"><b style="color:#fff">Bench</b> · ${bench}</div>`:''}`;
+  <div class="form"><span>${esc(r.team?.displayName||'')}</span><span>${esc(r.formation||'')}</span></div>${pred?`<div class="pnote">Based on the last ${pred.n} starting line-ups${pred.out.length?` · Out (red card last game): ${esc(pred.out.join(', '))}`:''}. Faded players are less certain. Injuries aren't known, so check the official lineup about an hour before kick-off.</div>`:(bench?`<div class="bench"><b style="color:#fff">Bench</b> · ${bench}</div>`:'')}`;
 }
 $('lseg').querySelectorAll('button').forEach(b=>b.onclick=()=>{side=b.dataset.s;$('lseg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));renderLineup(summary)});
+
+/* ---------- predicted lineup ---------- */
+const sumCache={};
+const getSum=(lg,id)=>sumCache[id]||(sumCache[id]=j(`${API}${lg}/summary?event=${id}`).catch(()=>null));
+function predictXI(teamId,sums){
+ const WT=[1,.85,.7,.55,.45];const stats=new Map();let template=null,formation='',team=null;const out=new Set(),outNames=[];let n=0;
+ sums.forEach(s=>{if(!s)return;const r=(s.rosters||[]).find(x=>String(x.team?.id)===String(teamId));if(!r)return;const st=(r.roster||[]).filter(p=>p.starter);if(st.length<11)return;
+  const w=WT[n]??.3;n++;
+  if(!template){template=st.map(p=>p.position?.abbreviation||'');formation=r.formation||'';team=r.team;
+   (s.keyEvents||[]).filter(e=>/red card|second yellow/i.test(e.type?.text||'')&&String(e.team?.id)===String(teamId)).forEach(e=>(e.participants||[]).forEach(pp=>{const k=pp.athlete?.id||pp.athlete?.displayName;if(k){out.add(k);outNames.push(pp.athlete?.displayName||'')}}))}
+  (r.roster||[]).forEach(p=>{const id=p.athlete?.id||p.athlete?.displayName;if(!id)return;const ww=p.starter?w:w*.25;const o=stats.get(id)||{p,score:0,pos:{}};if(p.starter)o.p=o.p.starter?o.p:p;o.score+=ww;const pa=p.position?.abbreviation||'';o.pos[pa]=(o.pos[pa]||0)+ww;stats.set(id,o)});
+ });
+ if(!template)return null;
+ const maxS=WT.slice(0,n).reduce((a,b)=>a+b,0)||1,cls=pa=>{const r=rowOf(pa);return r===0?'G':r===1?'D':r<=4?'M':'F'};
+ const chosen=new Set(),xi=[];
+ const order=template.map((pa,i)=>({pa,i})).sort((a,b)=>(cls(a.pa)==='G'?-1:0)-(cls(b.pa)==='G'?-1:0));
+ order.forEach(({pa})=>{let best=null;
+  for(const [id,o] of stats){if(chosen.has(id)||out.has(id))continue;
+   const main=Object.entries(o.pos).sort((a,b)=>b[1]-a[1])[0][0];
+   const fit=main===pa?1.15:o.pos[pa]?1.05:cls(main)===cls(pa)?1:.2;const sc=o.score*fit;
+   if(!best||sc>best.sc)best={id,o,sc}}
+  if(best){chosen.add(best.id);xi.push({...best.o.p,starter:true,subbedOut:false,position:{abbreviation:pa},conf:Math.min(1,best.o.score/maxS)})}});
+ return xi.length===11?{team,xi,formation,out:outNames,n}:null;
+}
+async function buildPrediction(x){
+ const {us,them}=sides(x.e),oppId=String(them.team?.id||'');
+ const recent=events.filter(v=>stateOf(v.e)==='post').slice(-5).reverse();
+ const usSums=await Promise.all(recent.map(v=>getSum(v.lg,v.e.id)));
+ let themSums=[];
+ if(oppId){try{const d=await j(`${API}${x.lg}/teams/${oppId}/schedule`);const ev=(d.events||[]).filter(e=>stateOf(e)==='post').slice(-4).reverse();themSums=await Promise.all(ev.map(e=>getSum(x.lg,e.id)))}catch(e){}}
+ return{us:predictXI(TEAM,usSums),them:predictXI(oppId,themSums)};
+}
 
 /* ---------- fixtures & table ---------- */
 function renderFixtures(){
@@ -296,23 +345,56 @@ function renderFixtures(){
  $('fx').innerHTML=(fut.length?'<div class="empty" style="padding:0 4px">Coming up</div>'+fut.map(item).join(''):'')+(past.length?'<div class="empty" style="padding:8px 4px 0">Recent</div>'+past.reverse().map(item).join(''):'')||'<div class="empty">No matches found.</div>';
  $('fx').querySelectorAll('.fx').forEach(b=>b.onclick=()=>{const x=events.find(v=>v.e.id===b.dataset.id);if(x)select(x,true)});
 }
+let tab='table',tableHTML='',leaders=[],teamLogos={};
+const ZONES=[[4,'#0a84ff','Champions League'],[5,'#ff9f0a','Europa League'],[6,'#30d158','Conference League']];
 async function loadTable(){
  try{const d=await j('https://site.api.espn.com/apis/v2/sports/soccer/esp.1/standings');
   const entries=(d.children?.[0]?.standings?.entries)||d.standings?.entries||[];
   const stat=(e,n)=>{const s=(e.stats||[]).find(x=>x.name===n||x.type===n);return s?(s.displayValue??s.value):''};
   const rows=entries.map(e=>({e,rank:+stat(e,'rank')||0})).sort((a,b)=>a.rank-b.rank);
-  const usIdx=rows.findIndex(r=>String(r.e.team?.id)===TEAM);
-  const pick=rows.filter((r,i)=>i<6||Math.abs(i-usIdx)<=1);
-  $('table').innerHTML=`<table><thead><tr><th>#</th><th>Team</th><th>P</th><th>GD</th><th>Pts</th></tr></thead><tbody>${pick.map(r=>`<tr class="${String(r.e.team?.id)===TEAM?'us':''}"><td>${r.rank||''}</td><td>${logo(r.e.team)?`<img src="${esc(logo(r.e.team))}" alt="">`:''}${esc(r.e.team?.shortDisplayName||r.e.team?.displayName)}</td><td>${esc(stat(r.e,'gamesPlayed'))}</td><td>${esc(stat(r.e,'pointDifferential'))}</td><td><b>${esc(stat(r.e,'points'))}</b></td></tr>`).join('')}</tbody></table>`;
- }catch(e){$('table').innerHTML='<div class="empty">Couldn\'t load the table.</div>'}
+  rows.forEach(r=>{teamLogos[String(r.e.team?.id)]=logo(r.e.team);teamLogos[r.e.team?.abbreviation]=logo(r.e.team)});
+  const N=rows.length,zone=rk=>rk<=4?ZONES[0][1]:rk===5?ZONES[1][1]:rk===6?ZONES[2][1]:rk>N-3?'#ff453a':'';
+  tableHTML=`<div class="tblwrap"><table><thead><tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>Pts</th></tr></thead><tbody>${rows.map(r=>{const z=zone(r.rank);return `<tr class="${String(r.e.team?.id)===TEAM?'us':''}">
+   <td class="${z?'zone':''}" style="--z:${z}">${r.rank||''}</td><td>${logo(r.e.team)?`<img src="${esc(logo(r.e.team))}" alt="">`:''}${esc(r.e.team?.shortDisplayName||r.e.team?.displayName)}</td>
+   <td>${esc(stat(r.e,'gamesPlayed'))}</td><td>${esc(stat(r.e,'wins'))}</td><td>${esc(stat(r.e,'ties'))}</td><td>${esc(stat(r.e,'losses'))}</td><td>${esc(stat(r.e,'pointDifferential'))}</td><td><b>${esc(stat(r.e,'points'))}</b></td></tr>`}).join('')}</tbody></table></div>
+   <div class="legend">${ZONES.map(z=>`<span><i style="--z:${z[1]}"></i>${z[2]}</span>`).join('')}<span><i style="--z:#ff453a"></i>Relegation</span></div>`;
+ }catch(e){tableHTML='<div class="empty">Couldn\'t load the table.</div>'}
+ try{const d=await j('https://site.web.api.espn.com/apis/site/v2/sports/soccer/esp.1/statistics');
+  leaders=(d.stats||[]).filter(c=>(c.leaders||[]).length).map(c=>({key:c.name,label:c.shortDisplayName||c.displayName||c.name,list:c.leaders}));
+ }catch(e){leaders=[]}
+ const tabs=[['table','Table'],...leaders.slice(0,4).map(c=>[c.key,c.label]),...(leaders.length?[['barca','Barça']]:[])];
+ $('tseg').innerHTML=tabs.map(([k,l])=>`<button data-t="${esc(k)}" class="${k===tab?'on':''}">${esc(l)}</button>`).join('');
+ $('tseg').querySelectorAll('button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;$('tseg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));renderTab()});
+ if(!tabs.some(t=>t[0]===tab))tab='table';
+ renderTab();
+}
+const aStat=(a,n)=>{const s=(a?.statistics||[]).find(x=>x.name===n);return s?Math.round(s.value??+s.displayValue??0):null};
+function ldrRow(i,a,val,sub,us){const tl=teamLogos[String(a?.team?.id)]||teamLogos[a?.team?.abbreviation]||'';
+ return `<div class="ldr ${us?'us':''}" style="animation-delay:${Math.min(i*25,300)}ms"><div class="rk">${i+1}</div>${tl?`<img src="${esc(tl)}" alt="">`:'<span></span>'}<div class="nm"><b>${esc(a?.displayName||'')}</b><small>${esc(a?.team?.displayName||'')}${sub?' · '+sub:''}</small></div><div class="val">${esc(val)}</div></div>`}
+function renderTab(){
+ if(tab==='table'){$('table').innerHTML=tableHTML||'<div class="empty">Loading…</div>';return}
+ if(tab==='barca'){
+  const byId=new Map();leaders.forEach(c=>c.list.forEach(l=>{const a=l.athlete;if((a?.team?.abbreviation)==='BAR'||String(a?.team?.id)===TEAM)byId.set(a.id||a.displayName,a)}));
+  const ps=[...byId.values()].map(a=>({a,g:aStat(a,'totalGoals')||0,as:aStat(a,'goalAssists')||0,ap:aStat(a,'appearances')})).sort((x,y)=>(y.g+y.as)-(x.g+x.as)||y.g-x.g);
+  $('table').innerHTML=ps.length?`<div class="tblwrap">${ps.map((p,i)=>ldrRow(i,p.a,p.g+p.as,`${p.g} goals · ${p.as} assists${p.ap!=null?' · '+p.ap+' apps':''}`,true)).join('')}</div><div class="legend"><span>Goals + assists in LaLiga, Barça players on the league leaderboards</span></div>`:'<div class="empty">No Barça players on the leaderboards yet.</div>';
+  return}
+ const c=leaders.find(x=>x.key===tab);if(!c){$('table').innerHTML='<div class="empty">No data.</div>';return}
+ $('table').innerHTML=`<div class="tblwrap">${c.list.slice(0,25).map((l,i)=>{const a=l.athlete,ap=aStat(a,'appearances');
+  return ldrRow(i,a,l.value!=null?Math.round(l.value):(l.displayValue||''),ap!=null?ap+' apps':'',(a?.team?.abbreviation)==='BAR'||String(a?.team?.id)===TEAM)}).join('')}</div>`;
 }
 
 /* ---------- selecting a match & live refresh ---------- */
 async function select(x,user){
- selId=x.e.id;selLg=x.lg;renderFixtures();
+ const changed=selId!==x.e.id;selId=x.e.id;selLg=x.lg;renderFixtures();
+ if(changed)prediction=null;
  summary=null;
  try{summary=await j(`${API}${x.lg}/summary?event=${x.e.id}`)}catch(e){}
- renderHero(x,summary);renderTimeline(summary);renderStats(summary);renderLineup(summary);
+ renderHero(x,summary);renderTimeline(summary);renderStats(summary);
+ const official=(summary?.rosters||[]).some(r=>(r.roster||[]).filter(p=>p.starter).length>=11);
+ if(!official&&(summary?.header?.competitions?.[0]?.status?.type?.state||stateOf(x.e))==='pre'&&prediction==null){
+  prediction=false;renderLineup(summary);const id=x.e.id;
+  buildPrediction(x).then(p=>{if(selId!==id)return;prediction=p;renderLineup(summary)}).catch(()=>{prediction=null;renderLineup(summary)});
+ }else renderLineup(summary);
  clearTimeout(liveTimer);
  const st=summary?.header?.competitions?.[0]?.status?.type?.state||stateOf(x.e);
  const soon=new Date(x.e.date)-Date.now()<90*60000;
