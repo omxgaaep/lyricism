@@ -428,7 +428,11 @@ body.s-player .empty{display:none!important}
 .aml.cur{color:#fff;transform:none;filter:none}
 .aml .w{filter:none;opacity:1;margin-right:0;transition:none}
 .aml.cur .w{background:linear-gradient(90deg,var(--red) calc(var(--p)*100%),#fff calc(var(--p)*100%));-webkit-background-clip:text;background-clip:text;color:transparent}
-.amgap{display:flex;gap:9px;height:.7em;align-items:center;margin:0 0 .9em}.amgap b{width:.28em;height:.28em;border-radius:50%;background:#fff;opacity:.3;animation:dot 1.3s infinite}
+.amgap{display:flex;gap:.22em;align-items:center;height:0;margin:0;opacity:0;overflow:hidden;font-size:clamp(24px,3vw,44px);transform:scale(.5);transform-origin:left center;
+ transition:height .5s var(--soft),margin .5s var(--soft),opacity .3s ease,transform .6s var(--spring)}
+.amgap.cur{height:.8em;margin:0 0 .75em;opacity:1;transform:none}
+.amgap b{width:.3em;height:.3em;border-radius:50%;background:#fff;opacity:.35;animation:amdot 1.6s ease-in-out infinite}
+@keyframes amdot{0%,100%{opacity:.3;transform:scale(.85)}40%{opacity:1;transform:scale(1.15)}}
 .amgap b:nth-child(2){animation-delay:.2s}.amgap b:nth-child(3){animation-delay:.4s}
 @media(max-width:760px),(max-aspect-ratio:1/1){.amL{left:6%;right:6%;top:5%;transform:none;width:auto;display:grid;grid-template-columns:90px 1fr;gap:0 14px}.amart{grid-row:1 / span 4;align-self:start}.amL>*:not(.amart){grid-column:2}.amti{margin-top:0}.amvol{display:none}
  .amR{left:6%;top:34%}}
