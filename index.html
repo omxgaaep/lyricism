@@ -1213,7 +1213,7 @@ R_.music={
   const sh=this.drag!=null?r*dur:ms,f2=v=>{v=Math.max(0,v|0);const s=Math.floor(v/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
   const c=f2(sh),rm='-'+f2(dur-sh);if($('amcur').textContent!==c)$('amcur').textContent=c;if($('amrem').textContent!==rm)$('amrem').textContent=rm;
   const t=$('title').textContent,a=$('artist').textContent;if($('amt').textContent!==t)$('amt').textContent=t;if($('ama').textContent!==a)$('ama').textContent=a;
-  if(this.pl!==base.playing){this.pl=base.playing;$('amplay').innerHTML=base.playing?ICON_PAUSE:ICON_PLAY}
+  if(this.pl!==base.playing){this.pl=base.playing;$('amplay').innerHTML=base.playing?'<svg viewBox="0 0 24 24"><path d="M7 5h3.6v14H7zM13.4 5H17v14h-3.6z" fill="currentColor"/></svg>':'<svg viewBox="0 0 24 24"><path d="M8.4 5.2v13.6L19.2 12z" fill="currentColor"/></svg>'}
   const tr=$('amtrack'),box=$('amR'),el=this.ci>=0?tr.querySelector(`[data-i="${this.ci}"]`):tr.firstElementChild;
   if(el){const target=box.clientHeight*.36-el.offsetTop;this.y+=(target-this.y)*.12;tr.style.transform=`translateY(${this.y.toFixed(1)}px)`}
  }
@@ -1589,6 +1589,7 @@ addEventListener('mouseleave',()=>showDock(false));
 addEventListener('keydown',e=>{wake();if(e.key==='Tab')showDock(true)});
 addEventListener('touchstart',e=>{wake();if(!e.target.closest('#dock,#stylebox')){showDock(true);clearTimeout(dockT);dockT=setTimeout(()=>B.classList.remove('show-dock'),4000)}},{passive:true});
 wake();
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(b&&e.detail>0)b.blur()},true);
 /* macOS-style dock magnification: buttons grow as the cursor gets near */
 {const dk=$('dock'),items=()=>dk.querySelectorAll('.db,.pill');
  dk.addEventListener('mousemove',e=>{dk.classList.add('mag');
