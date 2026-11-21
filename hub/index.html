@@ -88,7 +88,8 @@ body{margin:0;color:#fff;font:15px/1.4 -apple-system,'SF Pro Text',Inter,system-
 .paused .eq s{animation-play-state:paused}
 .idle b{font-size:22px;font-weight:800;letter-spacing:-.02em;display:block}.idle small{color:var(--dim)}
 /* Matchday widget */
-.mat{background:linear-gradient(120deg,rgba(0,77,152,.55),rgba(165,0,68,.45));}
+.mat{--m1:#004d98;--m2:#a50044;--m1s:#0a4f9a;--m2s:#9b0d47;background:linear-gradient(120deg,color-mix(in srgb,var(--m1) 55%,transparent),color-mix(in srgb,var(--m2) 45%,transparent));transition:background .6s}
+.mat .lab img{width:18px;height:18px;object-fit:contain;filter:drop-shadow(0 1px 3px rgba(0,0,0,.35))}
 .mrow{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:10px;text-align:center}
 .mrow img,.mrow .ph{width:clamp(40px,5vw,58px);height:clamp(40px,5vw,58px);object-fit:contain;margin:0 auto 6px;display:block;filter:drop-shadow(0 6px 14px rgba(0,0,0,.4))}
 .mrow .ph{border-radius:50%;background:rgba(255,255,255,.15)}
@@ -158,7 +159,7 @@ body{margin:0;color:#fff;font:15px/1.4 -apple-system,'SF Pro Text',Inter,system-
 [data-theme=light] .w{box-shadow:0 14px 40px rgba(20,30,60,.12),inset 0 .5px 0 rgba(255,255,255,.9)}
 [data-theme=light] .w:hover{box-shadow:0 24px 60px rgba(20,30,60,.18),inset 0 .5px 0 rgba(255,255,255,.9)}
 [data-theme=light] .lyr,[data-theme=light] .wrp,[data-theme=light] .wal,[data-theme=light] .mat{color:#fff}
-[data-theme=light] .lyr{background:#1b1b20}[data-theme=light] .mat{background:linear-gradient(120deg,#0a4f9a,#9b0d47)}[data-theme=light] .wrp,[data-theme=light] .wal{background:#2a2a30}
+[data-theme=light] .lyr{background:#1b1b20}[data-theme=light] .mat{background:linear-gradient(120deg,var(--m1s),var(--m2s))}[data-theme=light] .wrp,[data-theme=light] .wal{background:#2a2a30}
 [data-theme=light] .lyr .lab,[data-theme=light] .wrp .lab,[data-theme=light] .wal .lab,[data-theme=light] .mat .lab{color:rgba(255,255,255,.75)}
 [data-theme=light] .lyr .idle small{color:rgba(255,255,255,.7)}
 [data-theme=light] .con{color:#111;background:linear-gradient(120deg,rgba(255,55,95,.16),rgba(255,159,10,.12)),rgba(255,255,255,.6)}
@@ -182,7 +183,7 @@ body{margin:0;color:#fff;font:15px/1.4 -apple-system,'SF Pro Text',Inter,system-
   <a class="w lyr" href="../" id="wLyr"><div class="wbg" id="lyrBg"></div><div class="wshade"></div>
    <div class="lab"><i style="background:linear-gradient(135deg,#ff2bd6,#7a3cff)"><svg width="11" height="11" viewBox="0 0 24 24"><rect x="3" y="6" width="12" height="6" rx="3" fill="#fff" opacity=".7"/><rect x="9" y="13" width="12" height="6" rx="3" fill="#fff"/></svg></i>Lyricism<span class="eq" id="eq" hidden><s></s><s></s><s></s></span></div>
    <div class="body" id="lyrBody"></div></a>
-  <a class="w mat" href="../matchday/" id="wMat"><div class="lab"><i style="background:linear-gradient(90deg,#004d98 50%,#a50044 50%);box-shadow:0 0 0 1px #edbb00"></i>Matchday</div><div class="body" id="matBody"><div class="mst">Loading Barça…</div></div></a>
+  <a class="w mat" href="../matchday/" id="wMat"><div class="lab" id="matLab"><i style="background:linear-gradient(90deg,#004d98 50%,#a50044 50%);box-shadow:0 0 0 1px #edbb00"></i>Matchday</div><div class="body" id="matBody"><div class="mst">Loading Barça…</div></div></a>
   <a class="w wrp" href="../wrapped/" id="wWrp"><div class="wbg" id="wrpBg"></div><div class="wshade"></div><div class="lab"><i style="background:linear-gradient(135deg,#1ed760,#ff2bd6)"></i>Wrapped</div><div class="body" id="wrpBody"></div></a>
   <a class="w wal" href="../wall/" id="wWal"><div class="mos" id="mos"></div><div class="wshade"></div><div class="lab"><i style="background:#fff"><svg width="10" height="10" viewBox="0 0 10 10"><rect width="4" height="4" fill="#000"/><rect x="6" width="4" height="4" fill="#000"/><rect y="6" width="4" height="4" fill="#000"/><rect x="6" y="6" width="4" height="4" fill="#000"/></svg></i>Album Wall</div><div class="body"><b>Your albums</b></div></a>
   <div class="w wea" id="wWea"><div class="wfx" id="wfx"></div><div class="lab"><i style="background:linear-gradient(135deg,#5ac8fa,#007aff)"><svg width="11" height="11" viewBox="0 0 24 24"><circle cx="9" cy="9" r="5" fill="#ffd60a"/><path d="M8 19h10a4 4 0 0 0 0-8 6 6 0 0 0-11 2 3 3 0 0 0 1 6z" fill="#fff"/></svg></i>Weather<span class="wloc" id="wloc"></span></div><div id="wBody"><div class="wdesc">Loading weather…</div></div></div>
@@ -287,10 +288,24 @@ function tick(){
 
 /* ---------- Matchday widget ---------- */
 const ESPN='https://site.api.espn.com/apis/site/v2/sports/soccer/';
+// the team picked in Matchday on this device (Barça by default)
+function mdTeam(){let t=null;try{t=JSON.parse(localStorage.getItem('md_team')||'null')}catch(e){}
+ return t&&t.id?t:{id:'83',nick:'Barça',comps:['esp.1','uefa.champions','esp.copa_del_rey']}}
+function themeTile(t){
+ const w=$('wMat'),hx=h=>/^#[0-9a-f]{6}$/i.test(h||'')?h:null,c1=hx(t.tile?.[0]),c2=hx(t.tile?.[1]);
+ if(c1&&c2){const ch=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)),L=h=>{const [r,g,b]=ch(h).map(v=>{v/=255;return v<=.03928?v/12.92:((v+.055)/1.055)**2.4});return .2126*r+.7152*g+.0722*b};
+  const sink=h=>{let o=ch(h),k=0;while(L('#'+o.map(v=>Math.round(v).toString(16).padStart(2,'0')).join(''))>.12&&k<20){o=o.map(v=>v*.9);k++}return '#'+o.map(v=>Math.round(v).toString(16).padStart(2,'0')).join('')};
+  w.style.setProperty('--m1',c1);w.style.setProperty('--m2',c2);w.style.setProperty('--m1s',sink(c1));w.style.setProperty('--m2s',sink(c2))}
+ const dk=document.documentElement.dataset.theme!=='light',b=(dk&&t.logoDark)||t.logo;
+ if(b)$('matLab').innerHTML=`<img src="${esc(b)}" alt="">Matchday · ${esc(t.nick||t.short||'')}`;
+}
 async function match(){
+ const T=mdTeam(),nick=T.nick||T.short||'your team';
  try{
-  const lgs=['esp.1','uefa.champions','esp.copa_del_rey'],reqs=[];
-  lgs.forEach(lg=>['','?fixture=true'].forEach(q=>reqs.push(fetch(`${ESPN}${lg}/teams/83/schedule${q}`).then(r=>r.ok?r.json():{}).then(d=>(d.events||[]).map(e=>({e,lg}))).catch(()=>[]))));
+  themeTile(T);
+  if(!$('matBody').querySelector('.mrow'))$('matBody').innerHTML=`<div class="mst">Loading ${esc(nick)}…</div>`;
+  const lgs=(T.comps&&T.comps.length?T.comps:['esp.1','uefa.champions','esp.copa_del_rey']).slice(0,6),reqs=[];
+  lgs.forEach(lg=>['','?fixture=true'].forEach(q=>reqs.push(fetch(`${ESPN}${lg}/teams/${encodeURIComponent(T.id)}/schedule${q}`).then(r=>r.ok?r.json():{}).then(d=>(d.events||[]).map(e=>({e,lg}))).catch(()=>[]))));
   const all=(await Promise.all(reqs)).flat(),st=e=>(e.competitions?.[0]?.status||e.status)?.type?.state||'pre';
   const live=all.find(x=>st(x.e)==='in'),past=all.filter(x=>st(x.e)==='post').sort((a,b)=>new Date(b.e.date)-new Date(a.e.date))[0],next=all.filter(x=>st(x.e)==='pre'&&new Date(x.e.date)>Date.now()-3*3600e3).sort((a,b)=>new Date(a.e.date)-new Date(b.e.date))[0];
   const pick=live||(past&&Date.now()-new Date(past.e.date)<5*3600e3?past:next)||past;
@@ -303,7 +318,7 @@ async function match(){
   const line=state==='in'?`<span class="live"><s></s>LIVE ${esc(status.displayClock||'')}</span>`:state==='post'?'Full time':`${d.toLocaleDateString([],{weekday:'short',day:'numeric',month:'short'})} · ${d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}`;
   $('matBody').innerHTML=`<div class="mrow">${team(h)}${mid}${team(a)}</div><div class="mst">${line}</div>`;
   setTimeout(match,state==='in'?20000:300000);
- }catch(e){$('matBody').innerHTML='<div class="mst">Couldn\'t load Barça</div>'}
+ }catch(e){$('matBody').innerHTML=`<div class="mst">Couldn't load ${esc(nick)}</div>`}
 }
 
 /* ---------- Wrapped + Wall widgets ---------- */
