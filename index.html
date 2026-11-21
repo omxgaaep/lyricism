@@ -1352,8 +1352,8 @@ function autoPick(){
  const p2=pool.filter(x=>x!==lastAuto);if(p2.length)pool=p2;
  return lastAuto=pool[hash(track.name||'x')%pool.length];
 }
-function setStyle(s){
- styleChoice=s;store.set('ll_style',s);
+function setStyle(s,boot){
+ styleChoice=s;if(!boot){store.set('ll_style',s);store.set('ll_chose','1')}
  if(s==='auto'){s=autoPick();$('status').textContent='Auto style: '+STYLE_NAMES[s]}
  style=s;
  document.querySelectorAll('#stylebox .opt').forEach(o=>o.classList.toggle('on',o.dataset.s===styleChoice));
@@ -1667,7 +1667,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(b&&e
 }
 {const st=$('status');new MutationObserver(()=>{st.classList.add('fresh');clearTimeout(st._t);st._t=setTimeout(()=>st.classList.remove('fresh'),4000)}).observe(st,{childList:true,characterData:true,subtree:true})}
 
-setStyle(styleChoice);
+setStyle(styleChoice,true);
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='127.0.0.1'))navigator.serviceWorker.register('sw.js').catch(()=>{});
 
 /* ================= Sharing: lyric cards, clips, listen together ================= */
@@ -1832,7 +1832,7 @@ function applyRemote(d){
  if(key!==gKey){gKey=key;
   if(d.demo){startDemo();mode='guest'}
   else{track={id:d.id||key,key,dur:d.dur,name:d.name};curAlbum=d.album;curArtist0=d.artist0;setMeta(d.name,d.artist,d.art||null);loadLyrics(d.name,d.artist0,d.album,d.dur)}}
- if(d.style&&R_[d.style]&&!store.get('ll_style')&&d.style!==style){style=d.style;document.querySelectorAll('#stylebox .opt').forEach(o=>o.classList.toggle('on',o.dataset.s===style));mountStyle();applyBody();applyFont()}
+ if(d.style&&R_[d.style]&&!store.get('ll_chose')&&d.style!==style){style=d.style;document.querySelectorAll('#stylebox .opt').forEach(o=>o.classList.toggle('on',o.dataset.s===style));mountStyle();applyBody();applyFont()}
  const p=d.prog+(d.playing?Math.max(0,Date.now()-d.sent):0),pred=now();
  const jump=!(d.playing&&base.playing&&Math.abs(p-pred)<400);
  if(jump)base={prog:p,at:performance.now(),playing:d.playing};
