@@ -469,6 +469,7 @@ body.recording{cursor:none}
  background:rgba(30,30,34,.6);backdrop-filter:blur(20px);border:.5px solid rgba(255,255,255,.16);transform:translate(-50%,-70px);transition:transform .6s var(--spring)}
 body.is-guest .guestbar{transform:translate(-50%,0)}
 .guestbar i{width:8px;height:8px;border-radius:50%;background:#30d158;box-shadow:0 0 8px #30d158}
+.guestbar button.on{background:#30d158;color:#000}
 .guestbar button{border:0;background:rgba(255,255,255,.16);color:#fff;font-weight:600;font-size:12px;border-radius:12px;padding:5px 10px;cursor:pointer}
 @media(max-width:700px){.art{width:38%;right:-8%;bottom:-30%}.rig{height:min(64vh,580px)}.cap .s{max-width:70vw}.back span{display:none}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
@@ -530,7 +531,7 @@ body.is-guest .guestbar{transform:translate(-50%,0)}
 <div class="scrim" id="scrim"></div>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
 <div class="count" id="count"></div>
-<div class="guestbar" id="guestbar"><i></i><span>Live · following a friend's music</span><button id="gleave">Leave</button></div>
+<div class="guestbar" id="guestbar"><i></i><span id="gbartext">Joining…</span><button id="gplay" hidden>Play along</button><button id="gleave">Leave</button></div>
 <div class="stylebox" id="stylebox">
  <button class="opt" data-s="auto"><b>Auto</b><span>Picks a style to suit each song</span></button>
  <button class="opt" data-s="chat"><b>Texts</b><span>iMessage conversation</span></button>
@@ -1779,63 +1780,85 @@ async function startRec(){
  rec.start(250);setTimeout(()=>{if(rec.state!=='inactive')rec.stop()},recLen*1000);
 }
 
-/* ---- listen together (peer-to-peer via PeerJS) ---- */
-let peer=null,conns=[],tCode=null,gConn=null,gLat=0,gKey='';
-function loadPeer(){return new Promise((ok,no)=>{if(window.Peer)return ok();const sc=document.createElement('script');sc.src='https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';sc.onload=ok;sc.onerror=no;document.head.appendChild(sc)})}
+/* ---- listen together (relayed through ntfy.sh, works across any network) ---- */
+let tCode=store.get('ll_tcode')||null,tLast=null,gES=null,gKey='',gLast=null,playAlong=false;
+const RELAY='https://ntfy.sh/';
+const tTopic=c=>'lyricism-'+c;
 const joinLink=()=>location.origin+location.pathname.replace(/index\.html$/,'')+'?join='+tCode;
-function hostState(){return{t:'s',demo:mode==='demo',name:track.name||'',artist:$('artist').textContent,artist0:curArtist0||$('artist').textContent.split(',')[0],album:curAlbum,art:curArt||'',dur:track.dur||0,prog:now(),playing:base.playing}}
-function tLive(){return `<p class="sub" style="margin:0 0 8px"><span class="livedot"></span><b id="tcount">${conns.length}</b> watching now</p>
+function hostState(){return{t:'s',demo:mode==='demo',id:track.id||'',name:track.name||'',artist:$('artist').textContent,artist0:curArtist0||$('artist').textContent.split(',')[0],album:curAlbum,art:curArt||'',dur:track.dur||0,prog:Math.round(now()),playing:base.playing,sent:Date.now(),style}}
+async function tPost(obj){try{await fetch(RELAY+tTopic(tCode),{method:'POST',body:JSON.stringify(obj)})}catch(e){}}
+function tTick(force){
+ if(!tCode||(mode!=='spotify'&&mode!=='demo'))return;
+ const st=hostState(),L=tLast;
+ const pred=L?L.prog+(L.playing?st.sent-L.sent:0):0;
+ const changed=!L||st.name!==L.name||st.playing!==L.playing||Math.abs(st.prog-pred)>1500;
+ if(changed||force){tLast=st;tPost(st)}
+}
+setInterval(()=>tTick(false),1000);setInterval(()=>tTick(true),20000);
+function tLive(){return `<p class="sub" style="margin:0 0 8px"><span class="livedot"></span><b>Sharing live</b></p>
  <div class="linkbox"><span>${joinLink()}</span><button class="sbtn pri" id="tcopy">Copy link</button></div>
  <div class="srow"><button class="sbtn red" id="tstop">Stop sharing</button></div>`}
 function bindLive(){if($('tcopy'))$('tcopy').onclick=async()=>{try{await navigator.clipboard.writeText(joinLink());$('tcopy').textContent='Copied ✓'}catch(e){}};if($('tstop'))$('tstop').onclick=()=>{stopTogether();openTogether()}}
 function openTogether(){
- if(mode==='guest'){openSheet(`<h3>Listening together</h3><p class="sub">You're following a friend's music. The lyrics move with whatever they play.</p><div class="srow"><button class="sbtn red" id="tleave">Leave</button><button class="sbtn" id="tdone" style="margin-left:auto">Close</button></div>`);
-  $('tleave').onclick=leaveGuest;$('tdone').onclick=closeSheet;return}
- openSheet(`<h3>Listen together</h3><p class="sub">Send friends a link. They'll see what you're playing, with the lyrics in sync on their own screen. They don't need Spotify or to log in, and each person can pick their own style. Keep this tab open while you share.</p>
-  <div id="tbody">${tCode&&peer&&peer.open?tLive():`<button class="sbtn pri" id="tstart">Start sharing</button>`}</div>
+ if(mode==='guest'){guestSheet();return}
+ openSheet(`<h3>Listen together</h3><p class="sub">Send friends a link and they'll see what you're playing, with the lyrics in sync on their own screen. They don't need to log in, and each person picks their own style. Friends who are on your Spotify allowed list with Premium can also tap <b>Play along</b> to hear the same song on their own Spotify. Keep this tab open while you share.</p>
+  <div id="tbody">${tCode?tLive():`<button class="sbtn pri" id="tstart">Start sharing</button>`}</div>
   <div class="srow"><button class="sbtn" id="tdone" style="margin-left:auto">Done</button></div>`);
  $('tdone').onclick=closeSheet;if($('tstart'))$('tstart').onclick=startTogether;bindLive();
 }
-const updCount=()=>{if($('tcount'))$('tcount').textContent=conns.length};
-async function startTogether(){
+function startTogether(){
  if(mode!=='spotify'&&mode!=='demo'){$('status').textContent='Connect Spotify (or start the demo) first';return}
- $('tbody').innerHTML='<p class="sub">Starting…</p>';
- try{await loadPeer()}catch(e){$('tbody').innerHTML='<p class="sub">Couldn\'t load Listen Together. Check your connection.</p>';return}
- tCode=Math.random().toString(36).slice(2,8);
- peer=new Peer('lyricism-'+tCode);
- peer.on('open',()=>{if($('tbody')){$('tbody').innerHTML=tLive();bindLive()}});
- peer.on('connection',c=>{c.on('open',()=>{conns.push(c);updCount();c.send(hostState())});c.on('data',d=>{if(d&&d.ping)c.send({pong:d.ping})});c.on('close',()=>{conns=conns.filter(x=>x!==c);updCount()})});
- peer.on('error',e=>{$('status').textContent='Listen Together: '+(e.type==='unavailable-id'?'try again':e.type||'error')});
+ tCode=[...crypto.getRandomValues(new Uint8Array(9))].map(b=>'abcdefghjkmnpqrstuvwxyz23456789'[b%31]).join('');
+ store.set('ll_tcode',tCode);tLast=null;tTick(true);
+ $('tbody').innerHTML=tLive();bindLive();
 }
-function stopTogether(){conns.forEach(c=>{try{c.close()}catch(e){}});conns=[];if(peer)peer.destroy();peer=null;tCode=null}
-setInterval(()=>{if(conns.length){const st=hostState();conns.forEach(c=>{try{c.send(st)}catch(e){}})}},1000);
-async function startGuest(code){
+function stopTogether(){if(tCode)tPost({t:'end',sent:Date.now()});tCode=null;tLast=null;store.del('ll_tcode')}
+if(tCode)setTimeout(()=>tTick(true),4000);   // keep sharing across a page refresh
+
+function startGuest(code){
  mode='guest';document.body.classList.add('is-guest');$('connect').hidden=true;$('status').textContent='Joining…';
- try{await loadPeer()}catch(e){$('status').textContent='Couldn\'t connect. Check your internet';return}
- peer=new Peer();
- peer.on('open',()=>{gConn=peer.connect('lyricism-'+code,{reliable:true});
-  gConn.on('open',()=>{$('status').textContent='Connected. Following live';gConn.send({ping:performance.now()})});
-  gConn.on('data',d=>{if(d&&d.pong!=null){const half=(performance.now()-d.pong)/2;gLat=gLat?gLat*.7+half*.3:half;return}if(d&&d.t==='s')applyRemote(d)});
-  gConn.on('close',()=>{$('status').textContent='Your friend stopped sharing';document.body.classList.remove('is-guest')})});
- peer.on('error',e=>{$('status').textContent=e.type==='peer-unavailable'?'That link has ended. Your friend may have stopped sharing':'Connection problem: '+(e.type||'')});
- setInterval(()=>{if(gConn&&gConn.open)gConn.send({ping:performance.now()})},5000);
+ if(store.get('ll_refresh'))$('gplay').hidden=false;
+ gES=new EventSource(RELAY+tTopic(code)+'/sse?since=latest');
+ gES.onopen=()=>{if(!gLast)$('status').textContent='Connected. Waiting for your friend\'s music…'};
+ gES.onmessage=e=>{try{const m=JSON.parse(e.data);if(m.event&&m.event!=='message')return;const d=JSON.parse(m.message);
+  if(d.t==='end'){$('gbartext').textContent='Your friend stopped sharing';base={prog:now(),at:performance.now(),playing:false};document.body.classList.add('paused');return}
+  if(d.t!=='s')return;
+  if(Date.now()-d.sent>10*60000&&!gLast){$('gbartext').textContent='Your friend isn\'t sharing right now';return}
+  $('gbartext').textContent='Live · following a friend\'s music';applyRemote(d)}catch(err){}};
+ gES.onerror=()=>{$('status').textContent='Reconnecting…'};
 }
 function applyRemote(d){
- const key=d.name+'|'+d.artist0;
+ const key=d.name+'|'+d.artist0,prev=gLast;gLast=d;
  if(key!==gKey){gKey=key;
   if(d.demo){startDemo();mode='guest'}
-  else{track={id:key,key,dur:d.dur,name:d.name};curAlbum=d.album;curArtist0=d.artist0;setMeta(d.name,d.artist,d.art||null);loadLyrics(d.name,d.artist0,d.album,d.dur)}}
- const p=d.prog+(d.playing?gLat:0),pred=now();
- if(!(d.playing&&base.playing&&Math.abs(p-pred)<300))base={prog:p,at:performance.now(),playing:d.playing};
+  else{track={id:d.id||key,key,dur:d.dur,name:d.name};curAlbum=d.album;curArtist0=d.artist0;setMeta(d.name,d.artist,d.art||null);loadLyrics(d.name,d.artist0,d.album,d.dur)}}
+ if(d.style&&R_[d.style]&&!store.get('ll_style')&&d.style!==style){style=d.style;document.querySelectorAll('#stylebox .opt').forEach(o=>o.classList.toggle('on',o.dataset.s===style));mountStyle();applyBody();applyFont()}
+ const p=d.prog+(d.playing?Math.max(0,Date.now()-d.sent):0),pred=now();
+ const jump=!(d.playing&&base.playing&&Math.abs(p-pred)<400);
+ if(jump)base={prog:p,at:performance.now(),playing:d.playing};
  document.body.classList.toggle('paused',!d.playing);setIcon(d.playing);
+ if(playAlong&&(!prev||key!==prev.name+'|'+prev.artist0||d.playing!==prev.playing||jump))paSync(d);
 }
-function leaveGuest(){location.href=location.pathname}
+async function paSync(d){
+ if(d.demo||!d.id)return;
+ try{
+  if(!d.playing){await api('/me/player/pause',{method:'PUT'});return}
+  const pos=Math.max(0,Math.round(d.prog+(Date.now()-d.sent)+250));
+  const r=await api('/me/player/play',{method:'PUT',body:JSON.stringify({uris:['spotify:track:'+d.id],position_ms:pos})});
+  if(r.status===404)$('status').textContent='Open Spotify on one of your devices first, then tap Play along again';
+  else if(r.status===403)$('status').textContent='Play along needs Spotify Premium';
+ }catch(e){$('status').textContent='Log in to Spotify on this device to play along'}
+}
+function guestSheet(){openSheet(`<h3>Listening together</h3><p class="sub">You're following a friend's music. The lyrics move with whatever they play.${store.get('ll_refresh')?' Turn on <b>Play along</b> to hear the same song on your own Spotify (Premium).':''}</p>
+ <div class="srow"><button class="sbtn red" id="tleave">Leave</button><button class="sbtn" id="tdone" style="margin-left:auto">Close</button></div>`);$('tleave').onclick=leaveGuest;$('tdone').onclick=closeSheet}
+function leaveGuest(){if(gES)gES.close();location.href=location.pathname}
 $('gleave').onclick=leaveGuest;
+$('gplay').onclick=()=>{playAlong=!playAlong;$('gplay').classList.toggle('on',playAlong);$('gplay').textContent=playAlong?'Playing along':'Play along';if(playAlong&&gLast)paSync(gLast)};
 
 /* ---------- boot ---------- */
 (async()=>{
  const p=new URLSearchParams(location.search);
- if(p.get('join')){startGuest(p.get('join').replace(/[^a-z0-9]/gi,'').slice(0,12))}
+ if(p.get('join')){startGuest(p.get('join').replace(/[^a-z0-9]/gi,'').slice(0,16))}
  else if(p.get('code')){
   history.replaceState(null,'',REDIRECT);
   try{await tokenReq({grant_type:'authorization_code',code:p.get('code'),redirect_uri:REDIRECT,client_id:store.get('ll_cid'),code_verifier:store.get('ll_verifier')});store.set('ll_scope',SCOPES);startSpotify();if(store.get('ll_wantPlayer')){store.del('ll_wantPlayer');$('status').textContent='Logged in again. Tap the speaker button to play music here.'}}
