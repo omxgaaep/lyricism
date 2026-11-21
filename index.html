@@ -115,6 +115,7 @@ body.show-dock .dock>:nth-child(3){transition-delay:.08s}body.show-dock .dock>:n
 .db:hover{background:rgba(255,255,255,.12)}
 .dock.mag .db,.dock.mag .pill{transition:background .2s ease,transform .22s cubic-bezier(.25,.8,.3,1)}
 .db,.pill{transform-origin:50% 100%;will-change:transform}.db:active{transform:scale(.92)}
+.db{text-decoration:none}
 .db.big{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.95);color:#000}
 .db.big:hover{background:#fff}
 .db svg{width:20px;height:20px}.db.big svg{width:22px;height:22px}
@@ -517,6 +518,7 @@ body.is-guest .guestbar{transform:translate(-50%,0)}
   <button class="db tip" id="demo" data-tip="Demo song" aria-label="Demo song"><svg viewBox="0 0 24 24"><path d="M9 18V6l11-2v12" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="2.5" fill="currentColor"/><circle cx="17.5" cy="16" r="2.5" fill="currentColor"/></svg></button>
   <button class="db tip" id="here" data-tip="Play in Lyricism (Premium)" aria-label="Play music in Lyricism"><svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg></button>
   <button class="db tip" id="openSp" data-tip="Open Spotify app" aria-label="Open Spotify app"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M10 14l5-5M11 9h4v4" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <a class="db tip" id="homeBtn" href="hub/" data-tip="Home" aria-label="Home"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="2" fill="currentColor"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2" fill="currentColor" opacity=".7"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2" fill="currentColor" opacity=".7"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2" fill="currentColor" opacity=".45"/></svg></a>
   <button class="db tip" id="fs" data-tip="Fullscreen  F" aria-label="Fullscreen"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" stroke="currentColor" stroke-width="1.9" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
  </div>
  <span class="sep"></span>
@@ -570,6 +572,7 @@ const store={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},s
 const REDIRECT=location.origin+location.pathname.replace(/index\.html$/,'');
 const BUILTIN_CID='f0c7f71a532c47a49356e22129ee182a';   // the app owner's Spotify app — friends just log in
 const SCOPES='user-read-currently-playing user-read-playback-state user-modify-playback-state streaming user-read-email user-read-private user-top-read user-read-recently-played';
+const SUBAPPS=['wrapped','wall','concerts','hub'];   // pages that log in through here and get sent back
 const hasPlayerScope=()=>/\bstreaming\b/.test(store.get('ll_scope')||'');
 const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const ICON_PLAY='<svg width="20" height="20" viewBox="0 0 24 24"><path d="M7 4v16l13-8z" fill="currentColor"/></svg>';
@@ -1867,11 +1870,11 @@ $('gplay').onclick=()=>{playAlong=!playAlong;$('gplay').classList.toggle('on',pl
 /* ---------- boot ---------- */
 (async()=>{
  const p=new URLSearchParams(location.search);
- if(p.get('login')==='wrapped'){login(store.get('ll_cid')||BUILTIN_CID,'wrapped');return}
+ if(SUBAPPS.includes(p.get('login'))){login(store.get('ll_cid')||BUILTIN_CID,p.get('login'));return}
  if(p.get('join')){startGuest(p.get('join').replace(/[^a-z0-9]/gi,'').slice(0,16))}
  else if(p.get('code')){
   history.replaceState(null,'',REDIRECT);
-  try{await tokenReq({grant_type:'authorization_code',code:p.get('code'),redirect_uri:REDIRECT,client_id:store.get('ll_cid'),code_verifier:store.get('ll_verifier')});store.set('ll_scope',SCOPES);if(p.get('state')==='wrapped'){location.replace(REDIRECT+'wrapped/');return}startSpotify();if(store.get('ll_wantPlayer')){store.del('ll_wantPlayer');$('status').textContent='Logged in again. Tap the speaker button to play music here.'}}
+  try{await tokenReq({grant_type:'authorization_code',code:p.get('code'),redirect_uri:REDIRECT,client_id:store.get('ll_cid'),code_verifier:store.get('ll_verifier')});store.set('ll_scope',SCOPES);if(SUBAPPS.includes(p.get('state'))){location.replace(REDIRECT+p.get('state')+'/');return}startSpotify();if(store.get('ll_wantPlayer')){store.del('ll_wantPlayer');$('status').textContent='Logged in again. Tap the speaker button to play music here.'}}
   catch(e){$('status').textContent='Login failed: '+e.message}
  }else if(p.get('error')){history.replaceState(null,'',REDIRECT);$('status').textContent='Spotify login cancelled'}
  else if(store.get('ll_refresh'))startSpotify();

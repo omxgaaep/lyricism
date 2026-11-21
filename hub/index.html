@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Home</title>
+<meta name="theme-color" content="#060608">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="icon" href="../icon-192.png">
+<link rel="apple-touch-icon" href="../icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: personal home screen, calm and premium. IDEA: an iPhone home screen of live widgets.
+   PICTURE: the bento of widgets itself, each a window into one app. COLOUR: black glass, tinted by what's playing. TYPE: SF/Inter. */
+:root{--a:#ff2bd6;--b:#3b5bff;--glass:rgba(255,255,255,.07);--line:rgba(255,255,255,.13);--dim:rgba(255,255,255,.6);
+ --spring:linear(0,.009,.037 1.7%,.153 3.6%,.776 10.3%,1.001,1.142 16%,1.185,1.209 19%,1.215 19.9% 20.8%,1.199,1.165 25%,1.056 30.3%,1.008 33%,.973,.958 39.4%,.954 41.7%,.96,.977 47.8%,1.006 54.1%,1.015 58.2%,1.006 66.6%,.997 74.5%,1);
+ --soft:linear(0,.06,.21 7%,.44 12.5%,.7 19%,.87 25.5%,.96 32%,1.01 39%,1.02 46%,1.008 60%,1)}
+*{box-sizing:border-box;min-width:0}
+[hidden]{display:none!important}
+html{background:#060608}
+body{margin:0;color:#fff;font:15px/1.4 -apple-system,'SF Pro Text',Inter,system-ui,sans-serif;min-height:100vh;overflow-x:clip;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.bg{position:fixed;inset:0;z-index:-1;overflow:hidden;background:#060608}
+.bg i{position:absolute;width:65vmax;height:65vmax;border-radius:50%;filter:blur(110px);opacity:.42;transition:background 1.5s}
+.bg i:nth-child(1){background:var(--a);left:-22vmax;top:-28vmax;animation:d1 28s ease-in-out infinite alternate}
+.bg i:nth-child(2){background:var(--b);right:-24vmax;bottom:-30vmax;animation:d2 32s ease-in-out infinite alternate}
+@keyframes d1{to{transform:translate(14vw,12vh) scale(1.1)}}@keyframes d2{to{transform:translate(-12vw,-10vh) scale(.9)}}
+.wrap{max-width:1000px;margin:0 auto;padding:clamp(22px,5vh,56px) max(4vw,16px) 50px}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:clamp(18px,3vh,30px)}
+.hello small{display:block;color:var(--dim);font-weight:600;font-size:14px;margin-bottom:4px;animation:rise .7s var(--soft) both}
+.hello h1{margin:0;font-size:clamp(34px,6vw,54px);line-height:1;letter-spacing:-.04em;font-weight:800;animation:rise .7s .06s var(--soft) both}
+.me{display:flex;align-items:center;gap:10px;animation:rise .7s .1s var(--soft) both}
+.me .av{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--a),var(--b)) center/cover;box-shadow:0 0 0 2px rgba(255,255,255,.15)}
+.cbtn{height:40px;padding:0 16px;border-radius:20px;border:0;background:#1ed760;color:#000;font:700 14px inherit;cursor:pointer;text-decoration:none;display:inline-grid;place-items:center;transition:transform .45s var(--spring)}
+.cbtn:active{transform:scale(.94)}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:clamp(150px,19vw,200px);gap:clamp(12px,1.8vw,18px);
+ grid-template-areas:"lyr lyr mat mat" "lyr lyr wrp wal" "con con con con"}
+.w{position:relative;border-radius:28px;overflow:hidden;color:#fff;text-decoration:none;background:var(--glass);border:.5px solid var(--line);
+ backdrop-filter:blur(28px) saturate(160%);-webkit-backdrop-filter:blur(28px) saturate(160%);box-shadow:0 20px 50px rgba(0,0,0,.35),inset 0 .5px 0 rgba(255,255,255,.14);
+ display:flex;flex-direction:column;padding:18px;animation:wrise .8s var(--soft) both;transition:transform .55s var(--spring),box-shadow .3s}
+.w:hover{transform:translateY(-4px) scale(1.015);box-shadow:0 30px 70px rgba(0,0,0,.5),inset 0 .5px 0 rgba(255,255,255,.18)}
+.w:active{transform:scale(.97);transition-duration:.2s}
+.w:focus-visible{outline:2px solid #fff;outline-offset:3px}
+@keyframes wrise{from{opacity:0;transform:translateY(24px) scale(.94);filter:blur(10px)}}
+@keyframes rise{from{opacity:0;transform:translateY(12px);filter:blur(6px)}}
+.lyr{grid-area:lyr;animation-delay:.08s}.mat{grid-area:mat;animation-delay:.14s}.wrp{grid-area:wrp;animation-delay:.2s}.wal{grid-area:wal;animation-delay:.26s}.con{grid-area:con;animation-delay:.32s}
+.lab{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--dim);position:relative;z-index:2}
+.lab i{width:18px;height:18px;border-radius:6px;display:grid;place-items:center}
+.body{position:relative;z-index:2;margin-top:auto}
+.wbg{position:absolute;inset:0;background-size:cover;background-position:center;z-index:0;transition:opacity .8s}
+.wshade{position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(0,0,0,.05) 30%,rgba(0,0,0,.65))}
+/* Lyricism widget */
+.lyr .wbg{filter:blur(40px) saturate(1.5) brightness(.6);transform:scale(1.4)}
+.np{display:flex;gap:16px;align-items:flex-end}
+.np>div:last-child{flex:1;min-width:0}
+.np .cv{width:42%;flex:none;aspect-ratio:1;border-radius:14px;background:#222 center/cover;box-shadow:0 20px 40px rgba(0,0,0,.5);transition:transform .6s var(--spring)}
+.paused .np .cv{transform:scale(.9)}
+.np b{display:block;font-size:clamp(17px,2vw,22px);line-height:1.15;font-weight:800;letter-spacing:-.01em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.np small{display:block;color:rgba(255,255,255,.75);font-size:14px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.np .ln{margin-top:12px;font-size:13px;color:rgba(255,255,255,.85);font-weight:600;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.6em;transition:opacity .4s}
+.pb{height:4px;border-radius:2px;background:rgba(255,255,255,.22);margin-top:12px;overflow:hidden}.pb i{display:block;height:100%;width:0;background:#fff;border-radius:2px}
+.eq{display:inline-flex;gap:2px;align-items:flex-end;height:12px;margin-left:auto}.eq s{width:3px;background:#1ed760;border-radius:1px;animation:eq 1s ease-in-out infinite}
+.eq s:nth-child(2){animation-delay:.2s}.eq s:nth-child(3){animation-delay:.4s}
+@keyframes eq{0%,100%{height:30%}50%{height:100%}}
+.paused .eq s{animation-play-state:paused}
+.idle b{font-size:22px;font-weight:800;letter-spacing:-.02em;display:block}.idle small{color:var(--dim)}
+/* Matchday widget */
+.mat{background:linear-gradient(120deg,rgba(0,77,152,.55),rgba(165,0,68,.45));}
+.mrow{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:10px;text-align:center}
+.mrow img,.mrow .ph{width:clamp(40px,5vw,58px);height:clamp(40px,5vw,58px);object-fit:contain;margin:0 auto 6px;display:block;filter:drop-shadow(0 6px 14px rgba(0,0,0,.4))}
+.mrow .ph{border-radius:50%;background:rgba(255,255,255,.15)}
+.mrow span{font-size:12.5px;font-weight:700;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sc{font:700 clamp(38px,5vw,56px)/1 'Barlow Condensed',Inter,sans-serif;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.sc em{font-style:normal;opacity:.4}
+.mst{text-align:center;font-size:12px;font-weight:700;margin-top:6px;color:rgba(255,255,255,.85)}
+.live{display:inline-flex;align-items:center;gap:5px;background:#ff375f;color:#fff;border-radius:999px;padding:2px 8px;font-size:10.5px;font-weight:800}
+.live s{width:6px;height:6px;border-radius:50%;background:#fff;animation:bl 1.2s infinite}@keyframes bl{50%{opacity:.25}}
+/* Wrapped widget */
+.wrp .wbg{filter:saturate(1.2)}
+.wrp .body b{display:block;font-size:20px;font-weight:900;line-height:1.05;letter-spacing:-.02em}
+.wrp .body small{color:rgba(255,255,255,.8);font-size:12px;font-weight:600}
+/* Wall widget */
+.mos{position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:2px;z-index:0;perspective:600px}
+.mos div{background:#222 center/cover;transition:transform .9s var(--soft)}
+.mos div.flip{transform:rotateY(180deg) scaleX(-1)}
+.wal .wshade{background:linear-gradient(180deg,rgba(0,0,0,.35),transparent 35%,rgba(0,0,0,.55))}
+.wal .body b{font-size:16px;font-weight:800}
+/* Concerts widget */
+.con{background:linear-gradient(120deg,rgba(255,55,95,.28),rgba(255,159,10,.16));grid-auto-rows:auto}
+.gigs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:auto;position:relative;z-index:2}
+.gig{display:grid;grid-template-columns:52px minmax(0,1fr);gap:10px;align-items:center;padding:10px;border-radius:18px;background:rgba(0,0,0,.25)}
+.gig .d{text-align:center;border-radius:12px;background:rgba(255,255,255,.08);padding:5px 0}
+.gig .d small{display:block;font-size:10px;font-weight:800;color:#ff6b88;text-transform:uppercase}
+.gig .d b{display:block;font-size:20px;font-weight:900;line-height:1}
+.gig strong{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gig span{display:block;font-size:12px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.con .idle{margin-top:auto;position:relative;z-index:2}
+.foot{margin-top:26px;text-align:center;font-size:11.5px;color:rgba(255,255,255,.35)}
+@media(max-width:720px){
+ .grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(160px,auto);grid-template-areas:"lyr lyr" "lyr lyr" "mat mat" "wrp wal" "con con"}
+ .gigs{grid-template-columns:minmax(0,1fr)}.gig:nth-child(n+3){display:none}
+ .top{flex-direction:column;align-items:flex-start}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="bg"><i></i><i></i></div>
+<div class="wrap">
+ <div class="top"><div class="hello"><small id="date"></small><h1 id="greet">Hello</h1></div><div class="me" id="me"></div></div>
+ <main class="grid">
+  <a class="w lyr" href="../" id="wLyr"><div class="wbg" id="lyrBg"></div><div class="wshade"></div>
+   <div class="lab"><i style="background:linear-gradient(135deg,#ff2bd6,#7a3cff)"><svg width="11" height="11" viewBox="0 0 24 24"><rect x="3" y="6" width="12" height="6" rx="3" fill="#fff" opacity=".7"/><rect x="9" y="13" width="12" height="6" rx="3" fill="#fff"/></svg></i>Lyricism<span class="eq" id="eq" hidden><s></s><s></s><s></s></span></div>
+   <div class="body" id="lyrBody"></div></a>
+  <a class="w mat" href="../matchday/" id="wMat"><div class="lab"><i style="background:linear-gradient(90deg,#004d98 50%,#a50044 50%);box-shadow:0 0 0 1px #edbb00"></i>Matchday</div><div class="body" id="matBody"><div class="mst">Loading Barça…</div></div></a>
+  <a class="w wrp" href="../wrapped/" id="wWrp"><div class="wbg" id="wrpBg"></div><div class="wshade"></div><div class="lab"><i style="background:linear-gradient(135deg,#1ed760,#ff2bd6)"></i>Wrapped</div><div class="body" id="wrpBody"></div></a>
+  <a class="w wal" href="../wall/" id="wWal"><div class="mos" id="mos"></div><div class="wshade"></div><div class="lab"><i style="background:#fff"><svg width="10" height="10" viewBox="0 0 10 10"><rect width="4" height="4" fill="#000"/><rect x="6" width="4" height="4" fill="#000"/><rect y="6" width="4" height="4" fill="#000"/><rect x="6" y="6" width="4" height="4" fill="#000"/></svg></i>Album Wall</div><div class="body"><b>Your albums</b></div></a>
+  <a class="w con" href="../concerts/" id="wCon"><div class="lab"><i style="background:linear-gradient(135deg,#ff375f,#ff9f0a)"></i>Concerts</div><div id="conBody" class="idle"><b>Who's touring?</b><small>Gigs from artists you listen to</small></div></a>
+ </main>
+ <p class="foot">Lyricism · Matchday · Wrapped · Album Wall · Concerts</p>
+</div>
+<script>
+{
+const $=id=>document.getElementById(id);
+const store={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const img=o=>(o?.images||[]).slice().sort((a,b)=>(b.width||0)-(a.width||0))[0]?.url||'';
+const fmt=ms=>{ms=Math.max(0,ms|0);const s=Math.floor(ms/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+
+/* ---------- Spotify (shared login with Lyricism) ---------- */
+async function token(){
+ if(+store.get('ll_exp')>Date.now()&&store.get('ll_token'))return store.get('ll_token');
+ const rt=store.get('ll_refresh'),cid=store.get('ll_cid');if(!rt||!cid)return null;
+ try{const r=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'refresh_token',refresh_token:rt,client_id:cid})});
+  const j=await r.json();if(!r.ok)return null;store.set('ll_token',j.access_token);store.set('ll_exp',Date.now()+j.expires_in*1000-60000);if(j.refresh_token)store.set('ll_refresh',j.refresh_token);return j.access_token}catch(e){return null}
+}
+async function sp(path){const t=await token();if(!t)throw new Error('auth');const r=await fetch('https://api.spotify.com/v1'+path,{headers:{Authorization:'Bearer '+t}});if(r.status===204)return null;if(!r.ok)throw new Error(String(r.status));return r.json()}
+const li=()=>!!store.get('ll_refresh'),top=()=>/\buser-top-read\b/.test(store.get('ll_scope')||'');
+
+/* ---------- header ---------- */
+function header(name){
+ const h=new Date().getHours(),g=h<5?'Good night':h<12?'Good morning':h<18?'Good afternoon':'Good evening';
+ $('greet').textContent=g+(name?', '+name:'');
+ $('date').textContent=new Date().toLocaleDateString([],{weekday:'long',day:'numeric',month:'long'});
+}
+async function me(){
+ if(!li()){$('me').innerHTML=`<a class="cbtn" href="../">Connect Spotify</a>`;header('');return}
+ if(!top()){$('me').innerHTML=`<a class="cbtn" href="../?login=hub">Finish setup</a>`}
+ try{const m=await sp('/me');header((m.display_name||'').split(' ')[0]);if(top())$('me').innerHTML=`<span class="av" style="${img(m)?`background-image:url('${esc(img(m))}')`:''}" title="${esc(m.display_name||'')}"></span>`}catch(e){header('')}
+}
+
+/* ---------- colours ---------- */
+function tint(url){if(!url)return;const im=new Image();im.crossOrigin='anonymous';im.onload=()=>{try{const c=document.createElement('canvas');c.width=c.height=20;const x=c.getContext('2d');x.drawImage(im,0,0,20,20);
+ const d=x.getImageData(0,0,20,20).data,px=[];for(let i=0;i<d.length;i+=4){const r=d[i],g=d[i+1],b=d[i+2],mx=Math.max(r,g,b),mn=Math.min(r,g,b);px.push({r,g,b,s:(mx-mn)*(mx/255)})}
+ px.sort((a,b)=>b.s-a.s);const A=px[0],B=px[Math.floor(px.length*.2)];document.documentElement.style.setProperty('--a',`rgb(${A.r},${A.g},${A.b})`);document.documentElement.style.setProperty('--b',`rgb(${B.r},${B.g},${B.b})`)}catch(e){}};im.src=url}
+
+/* ---------- Lyricism widget: now playing + current lyric ---------- */
+let np=null,npAt=0,lyr={key:'',lines:[]};
+async function pollNP(){
+ if(!li()){$('lyrBody').innerHTML=`<div class="idle"><b>Synced lyrics</b><small>Connect Spotify to see what's playing</small></div>`;return}
+ try{const d=await sp('/me/player/currently-playing');
+  if(!d||!d.item||d.item.type!=='track'){np=null;$('eq').hidden=true;$('lyrBody').innerHTML=`<div class="idle"><b>Nothing playing</b><small>Play something on Spotify, then tap to open Lyricism</small></div>`;$('lyrBg').style.backgroundImage='';return}
+  const changed=!np||np.item.id!==d.item.id;np=d;npAt=performance.now();
+  $('wLyr').classList.toggle('paused',!d.is_playing);$('eq').hidden=false;
+  if(changed){const a=img(d.item.album);$('lyrBg').style.backgroundImage=a?`url('${a}')`:'';tint(a);
+   $('lyrBody').innerHTML=`<div class="np"><div class="cv" style="${a?`background-image:url('${esc(a)}')`:''}"></div><div><b>${esc(d.item.name)}</b><small>${esc(d.item.artists.map(x=>x.name).join(', '))}</small></div></div><div class="ln" id="ln"></div><div class="pb"><i id="pb"></i></div>`;
+   loadLyrics(d.item)}
+ }catch(e){if(e.message==='auth')$('lyrBody').innerHTML=`<div class="idle"><b>Reconnect Spotify</b><small>Your login expired. Tap to open Lyricism</small></div>`}
+}
+async function loadLyrics(t){
+ const key=t.id;lyr={key,lines:[]};
+ try{const r=await fetch('https://lrclib.net/api/get?'+new URLSearchParams({track_name:t.name,artist_name:t.artists[0].name,album_name:t.album.name,duration:Math.round(t.duration_ms/1000)}));if(!r.ok)return;const j=await r.json();if(lyr.key!==key||!j.syncedLyrics)return;
+  lyr.lines=j.syncedLyrics.split('\n').map(l=>{const m=l.match(/^\[(\d+):(\d+(?:\.\d+)?)\](.*)$/);return m?{t:(+m[1]*60+ +m[2])*1000,x:m[3].trim()}:null}).filter(Boolean)}catch(e){}
+}
+function tick(){
+ if(np&&np.item){const p=Math.min(np.item.duration_ms,np.progress_ms+(np.is_playing?performance.now()-npAt:0));const b=$('pb');if(b)b.style.width=(p/np.item.duration_ms*100)+'%';
+  const ln=$('ln');if(ln){let cur='';for(const l of lyr.lines){if(l.t<=p)cur=l.x;else break}if(ln.textContent!==cur){ln.style.opacity=0;setTimeout(()=>{ln.textContent=cur;ln.style.opacity=1},200)}}}
+ requestAnimationFrame(tick);
+}
+
+/* ---------- Matchday widget ---------- */
+const ESPN='https://site.api.espn.com/apis/site/v2/sports/soccer/';
+async function match(){
+ try{
+  const lgs=['esp.1','uefa.champions','esp.copa_del_rey'],reqs=[];
+  lgs.forEach(lg=>['','?fixture=true'].forEach(q=>reqs.push(fetch(`${ESPN}${lg}/teams/83/schedule${q}`).then(r=>r.ok?r.json():{}).then(d=>(d.events||[]).map(e=>({e,lg}))).catch(()=>[]))));
+  const all=(await Promise.all(reqs)).flat(),st=e=>(e.competitions?.[0]?.status||e.status)?.type?.state||'pre';
+  const live=all.find(x=>st(x.e)==='in'),past=all.filter(x=>st(x.e)==='post').sort((a,b)=>new Date(b.e.date)-new Date(a.e.date))[0],next=all.filter(x=>st(x.e)==='pre'&&new Date(x.e.date)>Date.now()-3*3600e3).sort((a,b)=>new Date(a.e.date)-new Date(b.e.date))[0];
+  const pick=live||(past&&Date.now()-new Date(past.e.date)<5*3600e3?past:next)||past;
+  if(!pick){$('matBody').innerHTML='<div class="mst">No matches found</div>';return}
+  const e=pick.e,cs=e.competitions?.[0]?.competitors||[],h=cs.find(c=>c.homeAway==='home')||cs[0]||{},a=cs.find(c=>c.homeAway==='away')||cs[1]||{},state=st(e);
+  const sc=c=>{const v=c.score;return v==null?'':typeof v==='object'?(v.displayValue??v.value??''):v},lg=t=>t?.logos?.[0]?.href||t?.logo||'';
+  const team=c=>`<div>${lg(c.team)?`<img src="${esc(lg(c.team))}" alt="">`:'<span class="ph"></span>'}<span>${esc(c.team?.shortDisplayName||c.team?.displayName||'')}</span></div>`;
+  const d=new Date(e.date),status=e.competitions?.[0]?.status||e.status||{};
+  const mid=state==='pre'?`<div class="sc"><em>vs</em></div>`:`<div class="sc">${esc(sc(h))}<em>–</em>${esc(sc(a))}</div>`;
+  const line=state==='in'?`<span class="live"><s></s>LIVE ${esc(status.displayClock||'')}</span>`:state==='post'?'Full time':`${d.toLocaleDateString([],{weekday:'short',day:'numeric',month:'short'})} · ${d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}`;
+  $('matBody').innerHTML=`<div class="mrow">${team(h)}${mid}${team(a)}</div><div class="mst">${line}</div>`;
+  setTimeout(match,state==='in'?20000:300000);
+ }catch(e){$('matBody').innerHTML='<div class="mst">Couldn\'t load Barça</div>'}
+}
+
+/* ---------- Wrapped + Wall widgets ---------- */
+let covers=[];
+async function tops(){
+ if(!li()||!top()){const msg=li()?'Tap to finish setup':'Connect Spotify first';$('wrpBody').innerHTML=`<b>Your top artist</b><small>${msg}</small>`;if(li()){$('wWrp').href='../?login=hub';$('wWal').href='../?login=hub'}return}
+ try{const [A,T]=await Promise.all([sp('/me/top/artists?limit=1&time_range=short_term'),sp('/me/top/tracks?limit=50&time_range=medium_term')]);
+  const a=A?.items?.[0];if(a){$('wrpBg').style.backgroundImage=`url('${img(a)}')`;$('wrpBody').innerHTML=`<small>Your #1 this month</small><b>${esc(a.name)}</b>`}
+  const seen=new Set();covers=(T?.items||[]).map(t=>t.album).filter(al=>al&&!seen.has(al.id)&&seen.add(al.id)).map(img).filter(Boolean);
+  $('mos').innerHTML=covers.slice(0,9).map(u=>`<div style="background-image:url('${esc(u)}')"></div>`).join('');
+  setInterval(flip,2600);
+ }catch(e){}
+}
+function flip(){const cells=$('mos').children;if(document.hidden||covers.length<10||!cells.length)return;const i=Math.random()*cells.length|0,shown=new Set([...cells].map(c=>c.style.backgroundImage));
+ const next=covers.find(u=>!shown.has(`url("${u}")`)&&!shown.has(`url('${u}')`))||covers[Math.random()*covers.length|0];const c=cells[i];
+ c.classList.add('flip');setTimeout(()=>{c.style.backgroundImage=`url('${next}')`;c.classList.remove('flip')},450);covers.push(covers.splice(covers.indexOf(next),1)[0])}
+
+/* ---------- Concerts widget (from the tracker's saved results) ---------- */
+function gigs(){
+ try{const c=JSON.parse(store.get('ct_cache')||'null');if(!c||!c.events?.length)return;
+  const city=store.get('ct_city')||'Perth',up=c.events.filter(e=>new Date(e.local||e.date)>=new Date(new Date().toDateString())).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const near=up.filter(e=>e.country==='AU'),list=(near.length?near:up).slice(0,3);if(!list.length)return;
+  $('conBody').outerHTML=`<div class="gigs">${list.map(e=>{const d=new Date(e.local?e.local+'T12:00':e.date);return `<div class="gig"><div class="d"><small>${esc(d.toLocaleDateString([],{month:'short'}))}</small><b>${d.getDate()}</b></div><div><strong>${esc(e.artist)}</strong><span>${esc(e.venue)}${e.city?' · '+esc(e.city):''}</span></div></div>`}).join('')}</div>`;
+ }catch(e){}
+}
+
+header('');me();pollNP();setInterval(()=>{if(!document.hidden)pollNP()},8000);requestAnimationFrame(tick);match();tops();gigs();
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){pollNP();header($('greet').textContent.split(', ')[1]||'')}});
+}
+</script>
+</body>
+</html>

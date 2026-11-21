@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Concerts</title>
+<meta name="theme-color" content="#0a0a0c">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* VOICE: anticipation, clean and useful. IDEA: a ticket stub wallet for gigs by artists you love.
+   PICTURE: a timeline of dated ticket cards with the artist photo. COLOUR: near-black, warm stage-light pink/orange accent. TYPE: Inter heavy dates. */
+:root{--acc:#ff375f;--acc2:#ff9f0a;--glass:rgba(255,255,255,.06);--line:rgba(255,255,255,.12);--dim:rgba(255,255,255,.6);
+ --spring:linear(0,.009,.037 1.7%,.153 3.6%,.776 10.3%,1.001,1.142 16%,1.185,1.209 19%,1.215 19.9% 20.8%,1.199,1.165 25%,1.056 30.3%,1.008 33%,.973,.958 39.4%,.954 41.7%,.96,.977 47.8%,1.006 54.1%,1.015 58.2%,1.006 66.6%,.997 74.5%,1);
+ --soft:linear(0,.06,.21 7%,.44 12.5%,.7 19%,.87 25.5%,.96 32%,1.01 39%,1.02 46%,1.008 60%,1)}
+*{box-sizing:border-box;min-width:0}
+[hidden]{display:none!important}
+html{background:#0a0a0c}
+body{margin:0;color:#fff;font:15px/1.45 -apple-system,'SF Pro Text',Inter,system-ui,sans-serif;min-height:100vh;overflow-x:clip;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.bg{position:fixed;inset:0;z-index:-1;overflow:hidden}
+.bg i{position:absolute;border-radius:50%;filter:blur(110px)}
+.bg i:nth-child(1){width:60vmax;height:60vmax;background:var(--acc);opacity:.28;left:-20vmax;top:-30vmax;animation:d1 26s ease-in-out infinite alternate}
+.bg i:nth-child(2){width:50vmax;height:50vmax;background:var(--acc2);opacity:.18;right:-20vmax;top:20vh;animation:d2 30s ease-in-out infinite alternate}
+@keyframes d1{to{transform:translate(14vw,10vh)}}@keyframes d2{to{transform:translate(-12vw,-8vh)}}
+.wrap{max-width:860px;margin:0 auto;padding:clamp(16px,3vw,34px) max(4vw,14px) 60px}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:22px}
+.homep{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 13px 0 11px;border-radius:17px;color:#fff;text-decoration:none;font-weight:600;font-size:14px;background:var(--glass);border:.5px solid var(--line);backdrop-filter:blur(20px);transition:transform .5s var(--spring),background .2s}
+.homep:hover{background:rgba(255,255,255,.12)}.homep:active{transform:scale(.93)}
+.ib{width:34px;height:34px;border-radius:17px;border:.5px solid var(--line);background:var(--glass);color:#fff;display:grid;place-items:center;cursor:pointer;transition:transform .5s var(--spring),background .2s}
+.ib:hover{background:rgba(255,255,255,.12)}.ib:active{transform:scale(.9)}
+h1{font-size:clamp(38px,7vw,60px);line-height:1;letter-spacing:-.04em;margin:0 0 6px;font-weight:900;animation:rise .7s var(--soft) both}
+h1 span{background:linear-gradient(90deg,var(--acc),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--dim);margin:0 0 20px;animation:rise .7s .06s var(--soft) both}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:22px;animation:rise .7s .12s var(--soft) both}
+.seg{display:inline-flex;background:rgba(118,118,128,.24);border-radius:11px;padding:2px}
+.seg button{border:0;background:none;color:#fff;font:600 13px inherit;padding:8px 13px;border-radius:9px;cursor:pointer;transition:background .25s,color .25s}
+.seg button.on{background:#fff;color:#000}
+.sel{appearance:none;height:38px;border-radius:11px;border:0;background:rgba(118,118,128,.24);color:#fff;padding:0 32px 0 12px;font:600 13px inherit;cursor:pointer;
+ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='white' stroke-width='2' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center}
+.sel option{color:#000}
+.count{margin-left:auto;font-size:13px;color:var(--dim)}
+.prog{height:4px;border-radius:2px;background:rgba(255,255,255,.1);overflow:hidden;margin:6px 0 8px}
+.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .3s}
+.checking{display:flex;align-items:center;gap:10px;color:var(--dim);font-size:13px;margin-bottom:18px}
+.checking .av{width:26px;height:26px;border-radius:50%;background:#222 center/cover;animation:pop .5s var(--spring)}
+.month{font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin:26px 4px 10px}
+.ev{display:grid;grid-template-columns:72px 64px minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px;border-radius:22px;background:var(--glass);border:.5px solid var(--line);
+ backdrop-filter:blur(24px);margin-bottom:10px;animation:rise .6s var(--soft) both;transition:transform .5s var(--spring),background .25s}
+.ev:hover{transform:translateY(-2px) scale(1.01);background:rgba(255,255,255,.09)}
+.ev.near{border-color:color-mix(in srgb,var(--acc) 60%,transparent);box-shadow:0 0 0 1px color-mix(in srgb,var(--acc) 30%,transparent),0 14px 40px color-mix(in srgb,var(--acc) 18%,transparent)}
+.dt{text-align:center;border-radius:16px;background:rgba(0,0,0,.3);padding:8px 4px}
+.dt small{display:block;font-size:11px;font-weight:800;color:var(--acc);text-transform:uppercase;letter-spacing:.05em}
+.dt b{display:block;font-size:28px;font-weight:900;line-height:1;margin:2px 0}
+.dt span{font-size:11px;color:var(--dim);font-weight:600}
+.ph{width:64px;height:64px;border-radius:50%;background:#222 center/cover;box-shadow:0 8px 20px rgba(0,0,0,.4)}
+.info b{display:block;font-size:16px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.info .v{color:var(--dim);font-size:13px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.tag{font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.1)}
+.tag.hot{background:var(--acc);color:#fff}.tag.warn{background:rgba(255,159,10,.2);color:#ffb340}.tag.bad{background:rgba(255,69,58,.2);color:#ff7a70}
+.btns{display:flex;flex-direction:column;gap:6px}
+.btn{height:36px;padding:0 14px;border-radius:18px;border:0;background:#fff;color:#000;font:700 13px inherit;cursor:pointer;text-decoration:none;display:grid;place-items:center;white-space:nowrap;transition:transform .45s var(--spring)}
+.btn.g{background:rgba(255,255,255,.12);color:#fff}
+.btn:active{transform:scale(.94)}
+.empty{text-align:center;padding:40px 20px;color:var(--dim);animation:rise .6s var(--soft) both}
+.empty b{display:block;color:#fff;font-size:20px;margin-bottom:6px}
+.card{padding:22px;border-radius:24px;background:var(--glass);border:.5px solid var(--line);backdrop-filter:blur(24px);animation:rise .7s var(--soft) both}
+.card h2{margin:0 0 6px;font-size:22px}.card p{color:var(--dim);margin:0 0 12px}
+.card ol{margin:0 0 14px;padding-left:20px;color:var(--dim)}.card ol b{color:#fff}
+.card input{width:100%;height:46px;border-radius:14px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.3);color:#fff;padding:0 14px;font:500 15px inherit;margin-bottom:10px}
+.card a{color:#fff}
+.foot{margin-top:30px;text-align:center;font-size:11.5px;color:rgba(255,255,255,.35)}
+.foot a{color:inherit}
+button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid #fff;outline-offset:2px}
+@keyframes rise{from{opacity:0;transform:translateY(14px);filter:blur(6px)}}
+@keyframes pop{from{transform:scale(.4);opacity:0}}
+@media(max-width:600px){.ev{grid-template-columns:58px 48px minmax(0,1fr);gap:10px}.ph{width:48px;height:48px}.btns{grid-column:1/-1;flex-direction:row}.btns .btn{flex:1}.dt b{font-size:22px}.count{margin-left:0;width:100%}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="bg"><i></i><i></i></div>
+<div class="wrap">
+ <header><a class="homep" href="../hub/"><svg width="9" height="15" viewBox="0 0 9 15"><path d="M7.5 1.5 1.5 7.5l6 6" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Home</a>
+  <span style="display:flex;gap:8px"><button class="ib" id="refresh" title="Check again" aria-label="Check again"><svg width="16" height="16" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <button class="ib" id="settings" title="Settings" aria-label="Settings"><svg width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></span></header>
+ <h1>Who's <span>touring</span>?</h1>
+ <p class="sub">Upcoming gigs from the artists you actually listen to.</p>
+ <main id="main"></main>
+ <p class="foot">Events from Ticketmaster · Artists from your Spotify · <a href="../hub/">Home</a></p>
+</div>
+<script>
+{
+/* Paste your free Ticketmaster "Consumer Key" between the quotes (developer.ticketmaster.com). */
+const TM_KEY='';
+
+const $=id=>document.getElementById(id);
+const store={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');
+const key=()=>store.get('tm_key')||TM_KEY;
+const CITIES={Perth:[-31.95,115.86],Sydney:[-33.87,151.21],Melbourne:[-37.81,144.96],Brisbane:[-27.47,153.03],Adelaide:[-34.93,138.6],'Gold Coast':[-28.02,153.4],Canberra:[-35.28,149.13],Hobart:[-42.88,147.33],Darwin:[-12.46,130.84],Auckland:[-36.85,174.76]};
+let city=store.get('ct_city')||'Perth',scope=store.get('ct_scope')||'near';
+const km=(a,b)=>{const R=6371,t=x=>x*Math.PI/180,dl=t(b[0]-a[0]),dn=t(b[1]-a[1]),h=Math.sin(dl/2)**2+Math.cos(t(a[0]))*Math.cos(t(b[0]))*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h))};
+
+/* ---------- Spotify (shared login with Lyricism) ---------- */
+async function token(){
+ if(+store.get('ll_exp')>Date.now()&&store.get('ll_token'))return store.get('ll_token');
+ const rt=store.get('ll_refresh'),cid=store.get('ll_cid');if(!rt||!cid)return null;
+ try{const r=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'refresh_token',refresh_token:rt,client_id:cid})});
+  const j=await r.json();if(!r.ok)return null;store.set('ll_token',j.access_token);store.set('ll_exp',Date.now()+j.expires_in*1000-60000);if(j.refresh_token)store.set('ll_refresh',j.refresh_token);return j.access_token}catch(e){return null}
+}
+async function sp(path){const t=await token();if(!t)throw new Error('auth');const r=await fetch('https://api.spotify.com/v1'+path,{headers:{Authorization:'Bearer '+t}});if(!r.ok)throw new Error(String(r.status));return r.json()}
+const img=o=>(o?.images||[]).slice().sort((a,b)=>(b.width||0)-(a.width||0))[0]?.url||'';
+
+async function myArtists(){
+ const m=new Map();
+ for(const r of ['short_term','medium_term','long_term']){try{(await sp(`/me/top/artists?limit=50&time_range=${r}`)).items.forEach((a,i)=>{const o=m.get(a.id)||{id:a.id,name:a.name,img:img(a),rank:999};o.rank=Math.min(o.rank,i+1+(r==='short_term'?0:r==='medium_term'?5:10));m.set(a.id,o)})}catch(e){if(e.message==='auth')throw e}}
+ return [...m.values()].sort((a,b)=>a.rank-b.rank).slice(0,60);
+}
+
+/* ---------- Ticketmaster ---------- */
+async function tmEvents(artist){
+ const u='https://app.ticketmaster.com/discovery/v2/events.json?'+new URLSearchParams({apikey:key(),keyword:artist.name,classificationName:'music',size:'50',sort:'date,asc'});
+ for(let tries=0;tries<3;tries++){
+  const r=await fetch(u);
+  if(r.status===429){await sleep(1200);continue}
+  if(r.status===401)throw new Error('key');
+  if(!r.ok)return[];
+  const d=await r.json(),want=norm(artist.name);
+  return(d._embedded?.events||[]).filter(e=>(e._embedded?.attractions||[]).some(a=>norm(a.name)===want)).map(e=>{
+   const v=e._embedded?.venues?.[0]||{},loc=v.location?[+v.location.latitude,+v.location.longitude]:null;
+   return{id:e.id,artist:artist.name,artistId:artist.id,img:artist.img,rank:artist.rank,name:e.name,url:e.url,date:e.dates?.start?.dateTime||e.dates?.start?.localDate,local:e.dates?.start?.localDate,time:e.dates?.start?.localTime,tbd:!!e.dates?.start?.timeTBA,
+    status:e.dates?.status?.code||'',onsale:e.sales?.public?.startDateTime||null,venue:v.name||'',city:v.city?.name||'',state:v.state?.stateCode||'',country:v.country?.countryCode||'',loc,
+    price:e.priceRanges?.[0]?{min:e.priceRanges[0].min,cur:e.priceRanges[0].currency}:null}});
+ }
+ return[];
+}
+
+/* ---------- rendering ---------- */
+let events=[],artists=[];
+function filtered(){
+ const c=CITIES[city];
+ return events.filter(e=>{if(new Date(e.local||e.date)<new Date(new Date().toDateString()))return false;
+  if(scope==='near')return e.loc?km(e.loc,c)<=150:norm(e.city)===norm(city);
+  if(scope==='au')return e.country==='AU'||(city==='Auckland'&&e.country==='NZ');
+  return true}).sort((a,b)=>new Date(a.date)-new Date(b.date));
+}
+function render(){
+ const list=filtered(),c=CITIES[city];
+ const ctr=`<div class="controls"><div class="seg" id="sc"><button data-s="near">Near ${esc(city)}</button><button data-s="au">Australia</button><button data-s="all">Everywhere</button></div>
+  <select class="sel" id="city">${Object.keys(CITIES).map(k=>`<option ${k===city?'selected':''}>${esc(k)}</option>`).join('')}</select>
+  <span class="count">${list.length} show${list.length===1?'':'s'} · ${artists.length} artists checked</span></div>`;
+ let body='';
+ if(!list.length)body=`<div class="empty"><b>${scope==='near'?`No shows near ${esc(city)} yet`:'No upcoming shows found'}</b>${scope==='near'?'Try Australia or Everywhere to see where your artists are playing.':'None of your top artists have shows listed on Ticketmaster right now.'}</div>`;
+ else{let lastM='';list.forEach((e,i)=>{const d=new Date(e.local?e.local+'T12:00':e.date),m=d.toLocaleDateString([],{month:'long',year:'numeric'});
+  if(m!==lastM){body+=`<div class="month">${esc(m)}</div>`;lastM=m}
+  const near=e.loc&&km(e.loc,c)<=150,days=Math.round((d-new Date())/864e5),soon=days>=0&&days<=14;
+  const st=e.status==='cancelled'?'<span class="tag bad">Cancelled</span>':e.status==='postponed'||e.status==='rescheduled'?'<span class="tag warn">'+(e.status==='postponed'?'Postponed':'Rescheduled')+'</span>':e.status==='offsale'?'<span class="tag warn">Not on sale</span>':'';
+  const pre=e.onsale&&new Date(e.onsale)>new Date()?`<span class="tag warn">On sale ${esc(new Date(e.onsale).toLocaleDateString([],{day:'numeric',month:'short'}))}</span>`:'';
+  body+=`<div class="ev ${near?'near':''}" style="animation-delay:${Math.min(i*40,400)}ms">
+   <div class="dt"><small>${esc(d.toLocaleDateString([],{month:'short'}))}</small><b>${d.getDate()}</b><span>${esc(d.toLocaleDateString([],{weekday:'short'}))}</span></div>
+   <div class="ph" style="background-image:url('${esc(e.img)}')"></div>
+   <div class="info"><b>${esc(e.artist)}</b><div class="v">${esc(e.venue)}${e.city?' · '+esc(e.city):''}${e.state&&e.country==='AU'?' '+esc(e.state):e.country&&e.country!=='AU'?', '+esc(e.country):''}</div>
+    <div class="tags">${near?'<span class="tag hot">Near you</span>':''}${soon?`<span class="tag">${days===0?'Today':days===1?'Tomorrow':'In '+days+' days'}</span>`:''}${e.rank<=10?`<span class="tag">Your top ${e.rank<=5?'5':'10'}</span>`:''}${st}${pre}${e.price?`<span class="tag">From ${esc(e.price.cur)} ${Math.round(e.price.min)}</span>`:''}</div></div>
+   <div class="btns"><a class="btn" href="${esc(e.url)}" target="_blank" rel="noopener">Tickets</a><button class="btn g" data-ics="${esc(e.id)}">Calendar</button></div></div>`})}
+ $('main').innerHTML=ctr+body;
+ $('sc').querySelectorAll('button').forEach(b=>{b.classList.toggle('on',b.dataset.s===scope);b.onclick=()=>{scope=b.dataset.s;store.set('ct_scope',scope);render()}});
+ $('city').onchange=e=>{city=e.target.value;store.set('ct_city',city);render()};
+ document.querySelectorAll('[data-ics]').forEach(b=>b.onclick=()=>ics(events.find(x=>x.id===b.dataset.ics)));
+}
+function ics(e){if(!e)return;
+ const d=e.date&&e.date.includes('T')?new Date(e.date):new Date((e.local||'')+'T'+(e.time||'19:00:00'));
+ const f=x=>x.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,''),end=new Date(d.getTime()+3*3600e3);
+ const txt=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Lyricism//Concerts//EN','BEGIN:VEVENT',`UID:${e.id}@lyricism`,`DTSTAMP:${f(new Date())}`,`DTSTART:${f(d)}`,`DTEND:${f(end)}`,
+  `SUMMARY:${e.artist} live`.replace(/[,;]/g,'\\$&'),`LOCATION:${[e.venue,e.city].filter(Boolean).join(', ')}`.replace(/[,;]/g,'\\$&'),`URL:${e.url}`,'END:VEVENT','END:VCALENDAR'].join('\r\n');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'text/calendar'}));a.download=`${e.artist.replace(/\W+/g,'-')}.ics`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);
+}
+
+/* ---------- flow ---------- */
+function setupKey(msg){
+ $('main').innerHTML=`<div class="card"><h2>One-time setup</h2><p>${msg||'Concert listings come from Ticketmaster, which needs a free key.'}</p>
+  <ol><li>Go to <a href="https://developer.ticketmaster.com" target="_blank" rel="noopener">developer.ticketmaster.com</a> and make a free account.</li><li>Open <b>My Apps</b> and copy the <b>Consumer Key</b>.</li><li>Paste it below.</li></ol>
+  <input id="k" placeholder="Consumer Key" autocomplete="off" spellcheck="false" value="${esc(store.get('tm_key')||'')}"><button class="btn" id="sv" style="width:100%;height:46px">Save and search</button></div>`;
+ $('sv').onclick=()=>{const v=$('k').value.trim();if(!v)return;store.set('tm_key',v);store.del('ct_cache');run()};
+}
+async function run(force){
+ if(!store.get('ll_refresh')){$('main').innerHTML=`<div class="card"><h2>Connect Spotify first</h2><p>Concerts uses your top artists from Spotify.</p><a class="btn" href="../" style="width:100%;height:46px">Connect in Lyricism</a></div>`;return}
+ if(!/\buser-top-read\b/.test(store.get('ll_scope')||'')){$('main').innerHTML=`<div class="card"><h2>One quick approval</h2><p>Allow access to your top artists so we can check who's touring.</p><a class="btn" href="../?login=concerts" style="width:100%;height:46px">Allow access</a></div>`;return}
+ if(!key()){setupKey();return}
+ try{const c=JSON.parse(store.get('ct_cache')||'null');if(!force&&c&&Date.now()-c.at<6*3600e3){events=c.events;artists=c.artists;render();return}}catch(e){}
+ $('main').innerHTML=`<div class="checking" id="chk"><div class="spin"></div>Getting your top artists…</div><div class="prog"><i id="pg"></i></div>`;
+ try{artists=await myArtists()}catch(e){$('main').innerHTML=`<div class="card"><h2>Spotify login expired</h2><p>Reconnect in Lyricism, then come back.</p><a class="btn" href="../" style="width:100%;height:46px">Open Lyricism</a></div>`;return}
+ events=[];
+ for(let i=0;i<artists.length;i++){const a=artists[i];
+  $('chk').innerHTML=`<span class="av" style="background-image:url('${esc(a.img)}')"></span>Checking ${esc(a.name)}… <span style="margin-left:auto">${i+1}/${artists.length}</span>`;$('pg').style.width=((i+1)/artists.length*100)+'%';
+  try{events.push(...await tmEvents(a))}catch(e){if(e.message==='key'){setupKey('That Ticketmaster key didn\'t work. Double-check you copied the Consumer Key.');return}}
+  await sleep(230);   // Ticketmaster allows about 5 requests a second
+ }
+ const seen=new Set();events=events.filter(e=>!seen.has(e.id)&&seen.add(e.id));
+ store.set('ct_cache',JSON.stringify({at:Date.now(),events,artists}));
+ render();
+}
+$('refresh').onclick=()=>run(true);
+$('settings').onclick=()=>setupKey('Change your Ticketmaster key.');
+run();
+}
+</script>
+<style>.spin{width:18px;height:18px;border-radius:50%;border:2.5px solid rgba(255,255,255,.2);border-top-color:#fff;animation:sp .8s linear infinite;flex:none}@keyframes sp{to{transform:rotate(360deg)}}</style>
+</body>
+</html>

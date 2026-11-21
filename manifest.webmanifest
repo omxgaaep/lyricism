@@ -2,7 +2,7 @@
   "name": "Lyricism",
   "short_name": "Lyricism",
   "description": "Animated synced lyrics for whatever you're playing on Spotify",
-  "start_url": "./",
+  "start_url": "./hub/",
   "scope": "./",
   "display": "standalone",
   "background_color": "#000000",

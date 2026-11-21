@@ -208,7 +208,7 @@ function loop(t){
 }
 function play(){
  $('root').innerHTML=`<div class="stage"><div class="story" id="story"><div class="bars" id="bars">${slides.map(()=>'<i><b></b></i>').join('')}</div>
-  <div class="top"><span></span><span style="display:flex;gap:6px"><button id="pp">Pause</button><a href="../">Lyricism</a></span></div>
+  <div class="top"><span></span><span style="display:flex;gap:6px"><button id="pp">Pause</button><a href="../hub/">Home</a></span></div>
   <div id="sl"></div><div class="tap l" id="tl"></div><div class="tap r" id="tr"></div></div></div>`;
  $('tl').onclick=()=>show(cur-1);$('tr').onclick=()=>{if(cur<slides.length-1)show(cur+1)};
  $('pp').onclick=()=>{paused=!paused;$('pp').textContent=paused?'Play':'Pause';if(!paused)t0=performance.now()-(parseFloat($('bars').children[cur].firstChild.style.width)||0)/100*DUR};
@@ -252,7 +252,7 @@ function home(){
   ${ok?`<div class="seg" id="rg">${Object.keys(RANGES).map(k=>`<button data-r="${k}" class="${k===range?'on':''}">${RANGE_SHORT[k]}</button>`).join('')}</div><button class="go" id="go">Show my Wrapped</button>`
    :li?`<button class="go" id="perm">Allow access to my listening</button><p class="note">One quick Spotify approval so Wrapped can read your top artists, songs and recent plays.</p>`
    :`<a class="go" href="../" style="display:grid;place-items:center;text-decoration:none">Connect Spotify in Lyricism</a><p class="note">Log in once in Lyricism, then come back here.</p>`}
-  <p class="note"><a href="../">← Back to Lyricism</a></p></div></div>`;
+  <p class="note"><a href="../hub/">‹ Home</a></p></div></div>`;
  if(ok){$('rg').querySelectorAll('button').forEach(b=>b.onclick=()=>{range=b.dataset.r;store.set('wr_range',range);$('rg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))});$('go').onclick=start}
  if($('perm'))$('perm').onclick=()=>{location.href='../?login=wrapped'};
 }
