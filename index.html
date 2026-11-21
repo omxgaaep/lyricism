@@ -420,8 +420,8 @@ body.s-player .empty{display:none!important}
 .amvol svg{width:14px;height:14px;flex:none}
 .amvol input{flex:1;-webkit-appearance:none;appearance:none;height:5px;border-radius:3px;background:linear-gradient(90deg,rgba(255,255,255,.8) var(--v,70%),rgba(255,255,255,.2) var(--v,70%));outline:none}
 .amvol input::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.4);cursor:pointer}
-.amR{position:absolute;left:calc(5% + min(36vw,52vh) + 6%);right:5%;top:0;bottom:0;overflow:hidden;z-index:1;mask-image:linear-gradient(transparent,#000 18%,#000 80%,transparent)}
-.amtrack{position:absolute;left:0;right:0;top:0;will-change:transform}
+.amR{position:absolute;left:calc(5% + min(36vw,52vh) + 6% - 24px);right:5%;top:0;bottom:0;overflow:hidden;z-index:1;mask-image:linear-gradient(transparent,#000 18%,#000 80%,transparent)}
+.amtrack{position:absolute;left:0;right:0;top:0;padding-left:24px;will-change:transform}
 .aml{font-size:clamp(24px,3vw,44px);font-weight:800;line-height:1.16;letter-spacing:-.01em;color:rgba(255,255,255,.3);margin:0 0 .75em;max-width:15em;cursor:pointer;transform-origin:left center;
  transition:color .5s ease,filter .6s ease,transform .7s var(--soft),opacity .5s;filter:blur(var(--bl,0px));transform:scale(.97)}
 .aml:hover{color:rgba(255,255,255,.55)}
@@ -435,7 +435,7 @@ body.s-player .empty{display:none!important}
 @keyframes amdot{0%,100%{opacity:.3;transform:scale(.85)}40%{opacity:1;transform:scale(1.15)}}
 .amgap b:nth-child(2){animation-delay:.2s}.amgap b:nth-child(3){animation-delay:.4s}
 @media(max-width:760px),(max-aspect-ratio:1/1){.amL{left:6%;right:6%;top:5%;transform:none;width:auto;display:grid;grid-template-columns:90px 1fr;gap:0 14px}.amart{grid-row:1 / span 4;align-self:start}.amL>*:not(.amart){grid-column:2}.amti{margin-top:0}.amvol{display:none}
- .amR{left:6%;top:34%}}
+ .amR{left:calc(6% - 24px);top:34%}}
 @media(max-width:700px){.art{width:38%;right:-8%;bottom:-30%}.rig{height:min(64vh,580px)}.cap .s{max-width:70vw}.back span{display:none}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
