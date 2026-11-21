@@ -513,6 +513,7 @@ body.is-guest .guestbar{transform:translate(-50%,0)}
  <div class="grp">
   <button class="db tip" id="shareBtn" data-tip="Share" aria-label="Share"><svg viewBox="0 0 24 24"><path d="M8.5 9H7a2 2 0 0 0-2 2v7.5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V11a2 2 0 0 0-2-2h-1.5M12 3.5v11M8.5 7 12 3.5 15.5 7" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
   <button class="db tip" id="styleBtn" data-tip="Style  0–9" aria-label="Lyric style"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="13.5" y="3.5" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="3.5" y="13.5" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="13.5" y="13.5" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></button>
+  <button class="db tip" id="romBtn" data-tip="Romanise lyrics  R" aria-label="Romanise lyrics" hidden><svg viewBox="0 0 24 24"><text x="2.5" y="11" font-size="9.5" font-weight="700" fill="currentColor" font-family="sans-serif">あ</text><text x="12" y="20.5" font-size="10" font-weight="800" fill="currentColor" font-family="sans-serif">a</text><path d="M13 6.5h6m-2-2 2 2-2 2" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
   <button class="db tip" id="beat" data-tip="Beat sync" aria-label="Beat sync"><svg viewBox="0 0 24 24"><path d="M3 12h1.5M7 8v8M10.5 5v14M14 9v6M17.5 6.5v11M21 12h-.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg></button>
   <div class="step tip" data-tip="Lyric timing"><button id="offM" aria-label="Lyrics earlier">−</button><span id="offV">0.00s</span><button id="offP" aria-label="Lyrics later">+</button></div>
   <button class="db tip" id="demo" data-tip="Demo song" aria-label="Demo song"><svg viewBox="0 0 24 24"><path d="M9 18V6l11-2v12" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="2.5" fill="currentColor"/><circle cx="17.5" cy="16" r="2.5" fill="currentColor"/></svg></button>
@@ -1455,6 +1456,7 @@ async function loadLyrics(name,artist,album,durMs){
  if(track.name!==name)return;
  if(hit&&hit.syncedLyrics){lines=parseLRC(hit.syncedLyrics);if(lines[0]&&lines[0].t>2500)lines.unshift({t:0,text:''});resetChat()}
  else if(hit&&hit.plainLyrics){plain=true;lines=hit.plainLyrics.split('\n').map(text=>({t:0,text}));showPlain()}
+ if(lines.length)romaniseSong(name);
  else{$('empty').hidden=false;$('empty').textContent=hit&&hit.instrumental?'Instrumental — no texts this time':'No lyrics found for this one'}
 }
 
@@ -1866,6 +1868,85 @@ function guestSheet(){openSheet(`<h3>Listening together</h3><p class="sub">You'r
 function leaveGuest(){if(gES)gES.close();location.href=location.pathname}
 $('gleave').onclick=leaveGuest;
 $('gplay').onclick=()=>{playAlong=!playAlong;$('gplay').classList.toggle('on',playAlong);$('gplay').textContent=playAlong?'Playing along':'Play along';if(playAlong&&gLast)paSync(gLast)};
+
+
+/* ================= Romanised lyrics (Japanese, Korean, Chinese, Cyrillic, Greek, Arabic, Hebrew, Hindi, Thai…) ================= */
+const NONLATIN=/[Ͱ-ϿЀ-ӿ֐-׿؀-ۿऀ-ॿ฀-๿぀-ヿ㐀-鿿가-힯]/;
+let romOn=store.get('ll_rom')!=='0',romReady=false,romLang='';
+function scriptOf(txt){
+ if(/[぀-ヿ]/.test(txt))return 'Japanese';
+ if(/[가-힯]/.test(txt))return 'Korean';
+ if(/[㐀-鿿]/.test(txt))return 'Chinese';
+ if(/[Ѐ-ӿ]/.test(txt))return 'Cyrillic';
+ if(/[؀-ۿ]/.test(txt))return 'Arabic';
+ if(/[֐-׿]/.test(txt))return 'Hebrew';
+ if(/[Ͱ-Ͽ]/.test(txt))return 'Greek';
+ if(/[ऀ-ॿ]/.test(txt))return 'Hindi';
+ if(/[฀-๿]/.test(txt))return 'Thai';
+ return '';
+}
+// Revised Romanization of Korean, with the common sound-change rules between syllables
+const KI=['g','kk','n','d','tt','r','m','b','pp','s','ss','','j','jj','ch','k','t','p','h'];
+const KV=['a','ae','ya','yae','eo','e','yeo','ye','o','wa','wae','oe','yo','u','wo','we','wi','yu','eu','ui','i'];
+const KF=['','k','k','k','n','n','n','t','l','k','m','l','l','l','p','l','m','p','p','t','t','ng','t','t','k','t','p','t'];
+const KLIA={1:'g',2:'kk',4:'n',7:'d',8:'r',16:'m',17:'b',19:'s',20:'ss',22:'j',23:'ch',24:'k',25:'t',26:'p',27:''};
+function hangul(text){
+ const out=[];const ch=[...text];
+ for(let i=0;i<ch.length;i++){
+  const c=ch[i].codePointAt(0);
+  if(c<0xac00||c>0xd7a3){out.push(ch[i]);continue}
+  const o=c-0xac00,L=Math.floor(o/588),V=Math.floor(o%588/28),T=o%28;
+  const n=ch[i+1]?ch[i+1].codePointAt(0):0,nh=n>=0xac00&&n<=0xd7a3,NL=nh?Math.floor((n-0xac00)/588):-1;
+  let ini=KI[L],fin=KF[T];
+  const prev=out._carry;out._carry=null;
+  if(prev!=null)ini=prev;
+  if(nh&&T){
+   if(NL===11&&KLIA[T]!==undefined){fin='';out._carry=KLIA[T]}                       // liaison: final moves onto a silent ㅇ
+   else if(NL===5&&(T===8||T===4)){fin='l';out._carry='l'}                           // ㄴ/ㄹ + ㄹ -> ll
+   else if((NL===2||NL===6)&&['k'].includes(fin))fin='ng';                          // ㄱ + ㄴ/ㅁ -> ng
+   else if((NL===2||NL===6)&&fin==='p')fin='m';                                     // ㅂ + ㄴ/ㅁ -> m
+   else if((NL===2||NL===6)&&fin==='t')fin='n';                                     // ㄷ/ㅅ/ㅈ… + ㄴ/ㅁ -> n
+   else if(T===8&&NL===2){fin='l';out._carry='l'}                                    // ㄹ + ㄴ -> ll
+   else if(T===27&&[0,3,12].includes(NL)){fin='';out._carry=KI[NL==0?15:NL==3?16:14]} // ㅎ + ㄱ/ㄷ/ㅈ -> k/t/ch
+  }
+  out.push(ini+KV[V]+fin);
+ }
+ return out.join('').replace(/\s+/g,' ').trim();
+}
+let romLibs={};
+function loadScript(src){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s)})}
+async function romaniser(lang){
+ if(lang==='Korean')return t=>hangul(t);
+ if(lang==='Chinese'){if(!romLibs.py)romLibs.py=loadScript('https://cdn.jsdelivr.net/npm/pinyin-pro@3.29.5/dist/index.js');await romLibs.py;const m=window.pinyinPro;
+  return t=>m.pinyin(t,{toneType:'symbol',nonZh:'consecutive'}).replace(/\s+/g,' ').trim()}
+ if(lang==='Japanese'){
+  if(!romLibs.jp)romLibs.jp=(async()=>{await loadScript('https://cdn.jsdelivr.net/npm/kuroshiro@1.2.1/dist/kuroshiro.min.js');await loadScript('https://cdn.jsdelivr.net/npm/kuroshiro-analyzer-kuromoji@1.1.0/dist/kuroshiro-analyzer-kuromoji.min.js');
+   const K=window.Kuroshiro.default||window.Kuroshiro,A=window.KuromojiAnalyzer.default||window.KuromojiAnalyzer,k=new K();await k.init(new A({dictPath:'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/'}));return k})();
+  const k=await romLibs.jp;const ha=await romaniser('Korean');   // songs often mix in Korean/Latin
+  return async t=>(await k.convert(t,{to:'romaji',mode:'spaced',romajiSystem:'hepburn'})).replace(/\s+/g,' ').replace(/ ([,.!?])/g,'$1').trim()}
+ if(!romLibs.aa)romLibs.aa=import('https://cdn.jsdelivr.net/npm/any-ascii@0.3.3/any-ascii.js');const m=await romLibs.aa;const f=m.default||m.anyAscii;
+ return t=>f(t).replace(/\s+/g,' ').trim();
+}
+async function romaniseSong(name){
+ romReady=false;romLang='';$('romBtn').hidden=true;$('romBtn').classList.remove('on');
+ const all=lines.map(l=>l.text).join('\n');if(!NONLATIN.test(all))return;
+ const lang=scriptOf(all);romLang=lang;$('romBtn').hidden=false;$('romBtn').classList.toggle('on',romOn);
+ if(romOn)$('status').textContent=`Romanising ${lang} lyrics…`;
+ let f;try{f=await romaniser(lang)}catch(e){if(track.name===name)$('status').textContent='Couldn\'t load the romaniser. Check your connection';return}
+ const out=[];for(const l of lines){if(track.name!==name)return;let r=l.text;if(r&&NONLATIN.test(r)){try{r=await f(r)}catch(e){}}out.push(r)}
+ if(track.name!==name)return;
+ lines.forEach((l,i)=>{l.orig=l.text;l.origWt=l.wt;l.rom=out[i]});romReady=true;
+ applyRom();
+}
+function applyRom(){
+ if(!romReady)return;
+ lines.forEach(l=>{if(romOn&&l.rom!==l.orig){l.text=l.rom;l.wt=null}else{l.text=l.orig;l.wt=l.origWt}});
+ $('romBtn').classList.toggle('on',romOn);
+ $('status').textContent=romOn?`Showing romanised ${romLang} lyrics`:`Showing original ${romLang} lyrics`;
+ if(plain)showPlain();else resetChat();
+}
+$('romBtn').onclick=()=>{romOn=!romOn;store.set('ll_rom',romOn?'1':'0');if(romReady)applyRom();else $('romBtn').classList.toggle('on',romOn)};
+addEventListener('keydown',e=>{if((e.key==='r'||e.key==='R')&&!$('romBtn').hidden&&e.target.tagName!=='INPUT')$('romBtn').click()});
 
 /* ---------- boot ---------- */
 (async()=>{

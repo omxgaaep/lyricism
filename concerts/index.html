@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Concerts</title>
 <meta name="theme-color" content="#0a0a0c">
+<script>/* light/dark: Auto follows local sunrise and sunset (saved by the Home weather widget) */
+(function(){try{var p=localStorage.getItem('ui_theme')||'auto',d;
+ if(p==='auto'){var s=JSON.parse(localStorage.getItem('ui_sun')||'null'),t=new Date(),m=t.getHours()*60+t.getMinutes();
+  if(s&&s.rise!=null&&s.set!=null&&Date.now()-s.at<3*864e5)d=!(m>=s.rise&&m<s.set);else d=t.getHours()<6||t.getHours()>=18}
+ else d=p==='dark';document.documentElement.dataset.theme=d?'dark':'light'}catch(e){}})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -74,6 +79,20 @@ h1 span{background:linear-gradient(90deg,var(--acc),var(--acc2));-webkit-backgro
 button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid #fff;outline-offset:2px}
 @keyframes rise{from{opacity:0;transform:translateY(14px);filter:blur(6px)}}
 @keyframes pop{from{transform:scale(.4);opacity:0}}
+:root[data-theme=light]{--glass:rgba(255,255,255,.65);--line:rgba(0,0,0,.08);--dim:rgba(0,0,0,.55)}
+:root[data-theme=light],[data-theme=light] body{background:#f4f1ee;color:#111}
+[data-theme=light] .bg i:nth-child(1){opacity:.16}[data-theme=light] .bg i:nth-child(2){opacity:.12}
+[data-theme=light] .homep,[data-theme=light] .ib,[data-theme=light] .seg button,[data-theme=light] .sel,[data-theme=light] .card a{color:#111}
+[data-theme=light] .seg button.on{background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+[data-theme=light] .sel{background-color:rgba(0,0,0,.06);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='black' stroke-width='2' fill='none'/%3E%3C/svg%3E")}
+[data-theme=light] .ev{box-shadow:0 10px 30px rgba(60,30,20,.08)}[data-theme=light] .ev:hover{background:rgba(255,255,255,.85)}
+[data-theme=light] .dt{background:rgba(0,0,0,.05)}
+[data-theme=light] .tag{background:rgba(0,0,0,.07)}[data-theme=light] .tag.hot{background:var(--acc);color:#fff}[data-theme=light] .tag.warn{color:#b86e00}[data-theme=light] .tag.bad{color:#c4271c}
+[data-theme=light] .btn{background:#111;color:#fff}[data-theme=light] .btn.g{background:rgba(0,0,0,.07);color:#111}
+[data-theme=light] .card input{background:#fff;color:#111;border-color:rgba(0,0,0,.15)}
+[data-theme=light] .empty b,[data-theme=light] .card ol b{color:#111}
+[data-theme=light] .prog,[data-theme=light] .spin{background:rgba(0,0,0,.08)}[data-theme=light] .spin{border-color:rgba(0,0,0,.15);border-top-color:#111;background:none}
+[data-theme=light] .foot{color:rgba(0,0,0,.4)}
 @media(max-width:600px){.ev{grid-template-columns:58px 48px minmax(0,1fr);gap:10px}.ph{width:48px;height:48px}.btns{grid-column:1/-1;flex-direction:row}.btns .btn{flex:1}.dt b{font-size:22px}.count{margin-left:0;width:100%}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
