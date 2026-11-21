@@ -281,6 +281,19 @@ function rowOf(pos){const p=(pos||'').toUpperCase();
  if(/^(AM)/.test(p))return 4;
  return 5}
 const lr=pos=>{const p=(pos||'').toUpperCase();return /^L/.test(p)?0:/-L$/.test(p)?1:/^R/.test(p)?4:/-R$/.test(p)?3:2};
+function depth(pos){const p=(pos||'').toUpperCase().replace(/-[LR]$/,'');
+ if(p==='G'||p==='GK')return 0;if(/^(LWB|RWB)$/.test(p))return 1.4;if(p==='D'||/^(CD|CB|RB|LB|SW)$/.test(p))return 1;
+ if(/^(DM|CDM)$/.test(p))return 2;if(/^(LM|RM)$/.test(p))return 3.2;if(/^(CM|M)$/.test(p))return 3;
+ if(/^(AM|CAM)$/.test(p))return 4;if(/^(LW|RW)$/.test(p))return 4.6;if(/^(F|CF|ST|SS)$/.test(p))return 5;return 3}
+function lines(starters,formation){
+ const gk=starters.filter(p=>depth(p.position?.abbreviation)===0).slice(0,1),rest=starters.filter(p=>!gk.includes(p)).sort((a,b)=>depth(a.position?.abbreviation)-depth(b.position?.abbreviation));
+ const nums=(formation||'').split('-').map(Number).filter(n=>n>0);
+ let rows=[];
+ if(nums.length&&nums.reduce((a,b)=>a+b,0)===rest.length){let i=0;rows=nums.map(n=>rest.slice(i,i+=n))}
+ else{const g=[[],[],[],[],[],[]];rest.forEach(p=>g[rowOf(p.position?.abbreviation)].push(p));rows=g.slice(1).filter(r=>r.length)}
+ rows=rows.map(r=>r.sort((a,b)=>lr(a.position?.abbreviation)-lr(b.position?.abbreviation)));
+ return [gk.length?gk:[starters[0]],...rows];
+}
 let prediction=null;   // {us:{team,xi,formation,out,n},them:{...}} for the selected upcoming match
 function renderLineup(sum){
  const rs=sum?.rosters||[];let r=rs.find(x=>(String(x.team?.id)===TEAM)===(side==='us'));
@@ -288,9 +301,7 @@ function renderLineup(sum){
  if((!r||starters.length<11)&&prediction&&prediction[side]){pred=prediction[side];r={team:pred.team,formation:pred.formation,roster:pred.xi};starters=pred.xi}
  $('lhead').innerHTML=pred?'Predicted lineup<span class="ptag">PREDICTED</span>':'Lineups';
  if(!r||starters.length<11){$('lineup').innerHTML=`<div class="empty">${prediction===false?'Working out a predicted lineup…':'Lineups usually appear about an hour before kick-off.'}</div>`;return}
- const rows=[[],[],[],[],[],[]];starters.slice(0,11).forEach(p=>rows[rowOf(p.position?.abbreviation)].push(p));
- const used=rows.filter(x=>x.length);
- used.forEach(row=>row.sort((a,b)=>lr(a.position?.abbreviation)-lr(b.position?.abbreviation)||(+a.formationPlace||0)-(+b.formationPlace||0)));
+ const used=lines(starters.slice(0,11),r.formation);
  const n=used.length;
  const dots=used.map((row,ri)=>{const y=92-ri*(80/(n-1||1));return row.map((p,i)=>{const x=(i+1)*100/(row.length+1);
   const nm=p.athlete?.shortName||p.athlete?.displayName||'';const off=p.subbedOut;
@@ -315,14 +326,15 @@ function predictXI(teamId,sums){
  });
  if(!template)return null;
  const maxS=WT.slice(0,n).reduce((a,b)=>a+b,0)||1,cls=pa=>{const r=rowOf(pa);return r===0?'G':r===1?'D':r<=4?'M':'F'};
- const chosen=new Set(),xi=[];
- const order=template.map((pa,i)=>({pa,i})).sort((a,b)=>(cls(a.pa)==='G'?-1:0)-(cls(b.pa)==='G'?-1:0));
- order.forEach(({pa})=>{let best=null;
-  for(const [id,o] of stats){if(chosen.has(id)||out.has(id))continue;
-   const main=Object.entries(o.pos).sort((a,b)=>b[1]-a[1])[0][0];
-   const fit=main===pa?1.15:o.pos[pa]?1.05:cls(main)===cls(pa)?1:.2;const sc=o.score*fit;
-   if(!best||sc>best.sc)best={id,o,sc}}
-  if(best){chosen.add(best.id);xi.push({...best.o.p,starter:true,subbedOut:false,position:{abbreviation:pa},conf:Math.min(1,best.o.score/maxS)})}});
+ // score every (slot, player) pair, then fill the strongest fits first so players land in their own positions
+ const pairs=[];
+ template.forEach((pa,si)=>{for(const [id,o] of stats){if(out.has(id))continue;
+  const share=(o.pos[pa]||0)/o.score,main=Object.entries(o.pos).sort((a,b)=>b[1]-a[1])[0][0];
+  const fit=o.pos[pa]?1+share:cls(main)===cls(pa)?.85:.15;pairs.push({si,id,o,pa,sc:o.score*fit})}});
+ pairs.sort((a,b)=>b.sc-a.sc);
+ const chosen=new Set(),filled=new Map();
+ for(const q of pairs){if(filled.has(q.si)||chosen.has(q.id))continue;filled.set(q.si,q);chosen.add(q.id);if(filled.size===template.length)break}
+ const xi=[...filled.values()].sort((a,b)=>a.si-b.si).map(q=>({...q.o.p,starter:true,subbedOut:false,position:{abbreviation:q.pa},conf:Math.min(1,q.o.score/maxS)}));
  return xi.length===11?{team,xi,formation,out:outNames,n}:null;
 }
 async function buildPrediction(x){
