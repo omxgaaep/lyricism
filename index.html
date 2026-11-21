@@ -1652,7 +1652,9 @@ const showDock=on=>{clearTimeout(dockT);if(on)B.classList.add('show-dock');else 
 addEventListener('mousemove',e=>{wake();showDock(e.clientY>innerHeight-130||!!e.target.closest('#dock,#stylebox,#sharebox'))});
 addEventListener('mouseleave',()=>showDock(false));
 addEventListener('keydown',e=>{wake();if(e.key==='Tab')showDock(true)});
-addEventListener('touchstart',e=>{wake();if(!e.target.closest('#dock,#stylebox')){showDock(true);clearTimeout(dockT);dockT=setTimeout(()=>B.classList.remove('show-dock'),4000)}},{passive:true});
+// touch screens: tap to show the menu; it stays for 10s after your last tap (and while a menu panel is open)
+const touchHide=()=>{clearTimeout(dockT);dockT=setTimeout(()=>{if($('stylebox').hidden&&!$('sharebox').classList.contains('open'))B.classList.remove('show-dock');else touchHide()},10000)};
+addEventListener('touchstart',e=>{wake();showDock(true);touchHide()},{passive:true});
 wake();
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(b&&e.detail>0)b.blur()},true);
 /* macOS-style dock magnification: buttons grow as the cursor gets near */
