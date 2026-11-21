@@ -1429,8 +1429,8 @@ wake();
 /* macOS-style dock magnification: buttons grow as the cursor gets near */
 {const dk=$('dock'),items=()=>dk.querySelectorAll('.db,.pill');
  dk.addEventListener('mousemove',e=>{dk.classList.add('mag');
-  items().forEach(b=>{const r=b.getBoundingClientRect(),d=Math.abs(e.clientX-(r.left+r.width/2)),k=Math.max(0,1-d/110),f=k*k*(3-2*k);
-   const sc=b.classList.contains('pill')?1+.08*f:1+.32*f;b.style.transform=`translateY(${(-6*f).toFixed(2)}px) scale(${sc.toFixed(3)})`})});
+  items().forEach(b=>{const r=b.getBoundingClientRect(),d=Math.abs(e.clientX-(r.left+r.width/2)),k=Math.max(0,1-d/85),f=k*k*(3-2*k);
+   const sc=b.classList.contains('pill')?1+.04*f:1+.16*f;b.style.transform=`translateY(${(-2*f).toFixed(2)}px) scale(${sc.toFixed(3)})`})});
  dk.addEventListener('mouseleave',()=>{items().forEach(b=>b.style.transform='');setTimeout(()=>dk.classList.remove('mag'),250)});
 }
 {const st=$('status');new MutationObserver(()=>{st.classList.add('fresh');clearTimeout(st._t);st._t=setTimeout(()=>st.classList.remove('fresh'),4000)}).observe(st,{childList:true,characterData:true,subtree:true})}
