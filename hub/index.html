@@ -55,15 +55,33 @@ body{margin:0;color:#fff;font:15px/1.4 -apple-system,'SF Pro Text',Inter,system-
 .wbg{position:absolute;inset:0;background-size:cover;background-position:center;z-index:0;transition:opacity .8s}
 .wshade{position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(0,0,0,.05) 30%,rgba(0,0,0,.65))}
 /* Lyricism widget */
-.lyr .wbg{filter:blur(40px) saturate(1.5) brightness(.6);transform:scale(1.4)}
-.np{display:flex;gap:16px;align-items:flex-end}
-.np>div:last-child{flex:1;min-width:0}
-.np .cv{width:42%;flex:none;aspect-ratio:1;border-radius:14px;background:#222 center/cover;box-shadow:0 20px 40px rgba(0,0,0,.5);transition:transform .6s var(--spring)}
-.paused .np .cv{transform:scale(.9)}
-.np b{display:block;font-size:clamp(17px,2vw,22px);line-height:1.15;font-weight:800;letter-spacing:-.01em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.np small{display:block;color:rgba(255,255,255,.75);font-size:14px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.np .ln{margin-top:12px;font-size:13px;color:rgba(255,255,255,.85);font-weight:600;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.6em;transition:opacity .4s}
-.pb{height:4px;border-radius:2px;background:rgba(255,255,255,.22);margin-top:12px;overflow:hidden}.pb i{display:block;height:100%;width:0;background:#fff;border-radius:2px}
+.lyr .wbg{filter:blur(46px) saturate(1.7) brightness(.78);transform:scale(1.5);animation:lyrdrift 26s ease-in-out infinite alternate}
+@keyframes lyrdrift{to{transform:scale(1.7) translate(4%,-3%) rotate(6deg)}}
+.lyr .wshade{background:radial-gradient(120% 80% at 30% 0%,rgba(0,0,0,0),rgba(0,0,0,.35) 70%),linear-gradient(180deg,rgba(0,0,0,.1),rgba(0,0,0,.45))}
+.lyr .body{display:flex;flex-direction:column;flex:1;margin-top:14px;min-height:0}
+.nphead{display:flex;align-items:center;gap:14px}
+.nphead .cv{width:clamp(62px,7vw,84px);aspect-ratio:1;flex:none;border-radius:12px;background-color:#222;background-size:cover!important;background-position:center;box-shadow:0 12px 28px rgba(0,0,0,.45);transition:transform .7s var(--spring)}
+.paused .nphead .cv{transform:scale(.9)}
+.nphead b{display:block;font-size:clamp(16px,1.7vw,20px);font-weight:800;letter-spacing:-.01em;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nphead small{display:block;color:rgba(255,255,255,.72);font-size:14px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nphead>div{flex:1;min-width:0}
+.lyrs{flex:1;display:flex;flex-direction:column;justify-content:center;gap:8px;padding:10px 0;min-height:0;overflow:hidden}
+.lcur{font-size:clamp(22px,2.9vw,34px);font-weight:800;line-height:1.14;letter-spacing:-.02em;text-wrap:balance;color:#fff;
+ display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.lnxt{font-size:clamp(14px,1.5vw,17px);font-weight:700;color:rgba(255,255,255,.45);line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lcur.in,.lnxt.in{animation:lin .55s var(--soft) both}.lnxt.in{animation-delay:.06s}
+@keyframes lin{from{opacity:0;transform:translateY(14px);filter:blur(6px)}}
+.lcur .lw{--p:0;opacity:calc(.4 + .6*var(--p));transition:opacity .15s}
+.lcur.none{color:rgba(255,255,255,.55);font-size:clamp(17px,2vw,22px)}
+.ptime{display:flex;align-items:center;gap:10px;font-size:11.5px;font-weight:700;color:rgba(255,255,255,.7);font-variant-numeric:tabular-nums}
+.ptime .pb{flex:1;margin:0}
+.pb{height:5px;border-radius:3px;background:rgba(255,255,255,.25);overflow:hidden}.pb i{display:block;height:100%;width:0;background:#fff;border-radius:3px}
+.npc{display:flex;align-items:center;justify-content:center;gap:clamp(18px,3vw,34px);margin-top:10px}
+.npc button{border:0;background:none;color:#fff;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;cursor:pointer;transition:transform .45s var(--spring),background .2s}
+.npc button:hover{background:rgba(255,255,255,.14)}.npc button:active{transform:scale(.86)}
+.npc button svg{width:24px;height:24px}.npc button.pp{width:52px;height:52px;background:rgba(255,255,255,.95);color:#000}.npc button.pp svg{width:24px;height:24px}
+.npc button.pp:hover{background:#fff}
+.npc button:focus-visible{outline:2px solid #fff;outline-offset:2px}
 .eq{display:inline-flex;gap:2px;align-items:flex-end;height:12px;margin-left:auto}.eq s{width:3px;background:#1ed760;border-radius:1px;animation:eq 1s ease-in-out infinite}
 .eq s:nth-child(2){animation-delay:.2s}.eq s:nth-child(3){animation-delay:.4s}
 @keyframes eq{0%,100%{height:30%}50%{height:100%}}
@@ -208,26 +226,62 @@ function tint(url){if(!url)return;const im=new Image();im.crossOrigin='anonymous
  px.sort((a,b)=>b.s-a.s);const A=px[0],B=px[Math.floor(px.length*.2)];document.documentElement.style.setProperty('--a',`rgb(${A.r},${A.g},${A.b})`);document.documentElement.style.setProperty('--b',`rgb(${B.r},${B.g},${B.b})`)}catch(e){}};im.src=url}
 
 /* ---------- Lyricism widget: now playing + current lyric ---------- */
-let np=null,npAt=0,lyr={key:'',lines:[]};
+let np=null,npAt=0,lyr={key:'',lines:[]},curIdx=-2;
+const ICO={prev:'<svg viewBox="0 0 24 24"><path d="M11.5 6v12L3 12zM21 6v12l-8.5-6z" fill="currentColor"/></svg>',next:'<svg viewBox="0 0 24 24"><path d="M12.5 6v12L21 12zM3 6v12l8.5-6z" fill="currentColor"/></svg>',
+ play:'<svg viewBox="0 0 24 24"><path d="M8.4 5.2v13.6L19.2 12z" fill="currentColor"/></svg>',pause:'<svg viewBox="0 0 24 24"><path d="M7 5h3.6v14H7zM13.4 5H17v14h-3.6z" fill="currentColor"/></svg>'};
 async function pollNP(){
- if(!li()){$('lyrBody').innerHTML=`<div class="idle"><b>Synced lyrics</b><small>Connect Spotify to see what's playing</small></div>`;return}
+ if(!li()){$('lyrBody').innerHTML=`<div class="idle" style="margin-top:auto"><b>Synced lyrics</b><small>Connect Spotify to see what's playing</small></div>`;return}
  try{const d=await sp('/me/player/currently-playing');
-  if(!d||!d.item||d.item.type!=='track'){np=null;$('eq').hidden=true;$('lyrBody').innerHTML=`<div class="idle"><b>Nothing playing</b><small>Play something on Spotify, then tap to open Lyricism</small></div>`;$('lyrBg').style.backgroundImage='';return}
+  if(!d||!d.item||d.item.type!=='track'){np=null;curIdx=-2;$('eq').hidden=true;$('lyrBody').innerHTML=`<div class="idle" style="margin-top:auto"><b>Nothing playing</b><small>Play something on Spotify, then tap to open Lyricism</small></div>`;$('lyrBg').style.backgroundImage='';return}
   const changed=!np||np.item.id!==d.item.id;np=d;npAt=performance.now();
   $('wLyr').classList.toggle('paused',!d.is_playing);$('eq').hidden=false;
-  if(changed){const a=img(d.item.album);$('lyrBg').style.backgroundImage=a?`url('${a}')`:'';tint(a);
-   $('lyrBody').innerHTML=`<div class="np"><div class="cv" style="${a?`background-image:url('${esc(a)}')`:''}"></div><div><b>${esc(d.item.name)}</b><small>${esc(d.item.artists.map(x=>x.name).join(', '))}</small></div></div><div class="ln" id="ln"></div><div class="pb"><i id="pb"></i></div>`;
+  if(changed){const a=img(d.item.album);$('lyrBg').style.backgroundImage=a?`url('${a}')`:'';tint(a);curIdx=-2;
+   $('lyrBody').innerHTML=`<div class="nphead"><div class="cv" style="${a?`background-image:url('${esc(a)}')`:''}"></div><div><b>${esc(d.item.name)}</b><small>${esc(d.item.artists.map(x=>x.name).join(', '))}</small></div></div>
+    <div class="lyrs"><div class="lcur none" id="lcur">♪</div><div class="lnxt" id="lnxt"></div></div>
+    <div class="ptime"><span id="tc">0:00</span><div class="pb"><i id="pb"></i></div><span id="tr">-0:00</span></div>
+    <div class="npc"><button data-a="previous" aria-label="Previous">${ICO.prev}</button><button class="pp" data-a="toggle" id="lpp" aria-label="Play or pause"></button><button data-a="next" aria-label="Next">${ICO.next}</button></div>`;
+   $('lyrBody').querySelectorAll('.npc button').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();ctl(b.dataset.a)});
    loadLyrics(d.item)}
- }catch(e){if(e.message==='auth')$('lyrBody').innerHTML=`<div class="idle"><b>Reconnect Spotify</b><small>Your login expired. Tap to open Lyricism</small></div>`}
+  const pp=$('lpp');if(pp)pp.innerHTML=d.is_playing?ICO.pause:ICO.play;
+ }catch(e){if(e.message==='auth')$('lyrBody').innerHTML=`<div class="idle" style="margin-top:auto"><b>Reconnect Spotify</b><small>Your login expired. Tap to open Lyricism</small></div>`}
+}
+async function ctl(a){
+ if(!np)return;
+ const t=await token();if(!t)return;
+ let url,method='POST';
+ if(a==='toggle'){method='PUT';url=np.is_playing?'pause':'play';np.progress_ms=Math.min(np.item.duration_ms,np.progress_ms+(np.is_playing?performance.now()-npAt:0));npAt=performance.now();np.is_playing=!np.is_playing;
+  $('wLyr').classList.toggle('paused',!np.is_playing);$('lpp').innerHTML=np.is_playing?ICO.pause:ICO.play}
+ else url=a;
+ try{const r=await fetch('https://api.spotify.com/v1/me/player/'+url,{method,headers:{Authorization:'Bearer '+t}});
+  if(r.status===403){const c=$('lcur');if(c){c.className='lcur none in';c.textContent='Controls need Spotify Premium'}}}catch(e){}
+ setTimeout(pollNP,a==='toggle'?900:450);
 }
 async function loadLyrics(t){
  const key=t.id;lyr={key,lines:[]};
- try{const r=await fetch('https://lrclib.net/api/get?'+new URLSearchParams({track_name:t.name,artist_name:t.artists[0].name,album_name:t.album.name,duration:Math.round(t.duration_ms/1000)}));if(!r.ok)return;const j=await r.json();if(lyr.key!==key||!j.syncedLyrics)return;
-  lyr.lines=j.syncedLyrics.split('\n').map(l=>{const m=l.match(/^\[(\d+):(\d+(?:\.\d+)?)\](.*)$/);return m?{t:(+m[1]*60+ +m[2])*1000,x:m[3].trim()}:null}).filter(Boolean)}catch(e){}
+ try{const r=await fetch('https://lrclib.net/api/get?'+new URLSearchParams({track_name:t.name,artist_name:t.artists[0].name,album_name:t.album.name,duration:Math.round(t.duration_ms/1000)}));
+  const j=r.ok?await r.json():null;if(lyr.key!==key)return;
+  if(j&&j.syncedLyrics)lyr.lines=j.syncedLyrics.split('\n').map(l=>{const m=l.match(/^\[(\d+):(\d+(?:\.\d+)?)\](.*)$/);return m?{t:(+m[1]*60+ +m[2])*1000,x:m[3].trim()}:null}).filter(Boolean);
+  if(!lyr.lines.length){const c=$('lcur');if(c){c.className='lcur none in';c.textContent=j&&j.instrumental?'Instrumental':'No synced lyrics for this one'}}
+ }catch(e){}
 }
+const fmt2=ms=>{ms=Math.max(0,ms|0);const s=Math.floor(ms/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
 function tick(){
- if(np&&np.item){const p=Math.min(np.item.duration_ms,np.progress_ms+(np.is_playing?performance.now()-npAt:0));const b=$('pb');if(b)b.style.width=(p/np.item.duration_ms*100)+'%';
-  const ln=$('ln');if(ln){let cur='';for(const l of lyr.lines){if(l.t<=p)cur=l.x;else break}if(ln.textContent!==cur){ln.style.opacity=0;setTimeout(()=>{ln.textContent=cur;ln.style.opacity=1},200)}}}
+ if(np&&np.item){const dur=np.item.duration_ms,p=Math.min(dur,np.progress_ms+(np.is_playing?performance.now()-npAt:0));
+  const b=$('pb');if(b){b.style.width=(p/dur*100)+'%';const tc=fmt2(p),tr='-'+fmt2(dur-p);if($('tc').textContent!==tc)$('tc').textContent=tc;if($('tr').textContent!==tr)$('tr').textContent=tr}
+  if(lyr.lines.length&&$('lcur')){
+   const t=p+(+store.get('ll_offset')||0);let i=-1;for(let k=0;k<lyr.lines.length;k++){if(lyr.lines[k].t<=t)i=k;else break}
+   let ci=i;while(ci>=0&&!lyr.lines[ci].x)ci--;
+   const isGap=i>=0&&!lyr.lines[i].x&&lyr.lines[i+1]&&lyr.lines[i+1].t-lyr.lines[i].t>4000;
+   const key=isGap?'gap'+i:ci;
+   if(key!==curIdx){curIdx=key;
+    const c=$('lcur'),n=$('lnxt');let nx=(ci>=0?ci:i)+1;while(lyr.lines[nx]&&!lyr.lines[nx].x)nx++;
+    if(isGap||ci<0){c.className='lcur none in';c.textContent='♪';n.className='lnxt in';n.textContent=lyr.lines[nx]?.x||''}
+    else{c.className='lcur in';c.innerHTML=lyr.lines[ci].x.split(/\s+/).map(w=>`<span class="lw">${esc(w)}</span>`).join(' ');n.className='lnxt in';n.textContent=lyr.lines[nx]?.x||''}
+   }
+   if(typeof curIdx==='number'&&curIdx>=0){const L=lyr.lines[curIdx],nt=(lyr.lines.slice(curIdx+1).find(l=>l)||{}).t||L.t+4000;
+    const lp=Math.max(0,Math.min(1,(t-L.t)/(Math.min(nt-L.t,7000)*.85))),ws=$('lcur').querySelectorAll('.lw'),lens=[...ws].map(w=>w.textContent.length+1),tot=lens.reduce((a,b)=>a+b,0)||1;
+    let acc=0;ws.forEach((w,k)=>{const a=acc/tot,b=(acc+lens[k])/tot;acc+=lens[k];w.style.setProperty('--p',Math.max(0,Math.min(1,(lp-a)/(b-a))).toFixed(3))})}
+  }}
  requestAnimationFrame(tick);
 }
 
