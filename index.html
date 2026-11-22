@@ -473,6 +473,10 @@ body.is-guest .guestbar{transform:translate(-50%,0)}
 .guestbar button.on{background:#30d158;color:#000}
 .guestbar button{border:0;background:rgba(255,255,255,.16);color:#fff;font-weight:600;font-size:12px;border-radius:12px;padding:5px 10px;cursor:pointer}
 @media(max-width:700px){.art{width:38%;right:-8%;bottom:-30%}.rig{height:min(64vh,580px)}.cap .s{max-width:70vw}.back span{display:none}}
+/* lyrics are for watching, not editing: no text caret, selection highlight or tap flash when a line is clicked to seek */
+.view{-webkit-user-select:none;user-select:none;caret-color:transparent;-webkit-tap-highlight-color:transparent}
+.view input,.view textarea{-webkit-user-select:text;user-select:text;caret-color:auto}
+.aml:not(.cur) .w{background:none!important;color:inherit!important}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -1233,7 +1237,7 @@ R_.music={
    <div class="amR" id="amR"><div class="amtrack" id="amtrack">${ls}</div></div>`;
   $('amprev').onclick=()=>control('previous');$('amnext').onclick=()=>control('next');$('amplay').onclick=()=>control('toggle');
   $('amshuf').onclick=setShuffle;$('amrep').onclick=setRepeat;$('amvol').oninput=e=>setVol(+e.target.value);
-  $('amtrack').onclick=e=>{const l=e.target.closest('.aml');if(l)seekTo(lines[+l.dataset.i].t-offset+20)};
+  $('amtrack').onclick=e=>{const l=e.target.closest('.aml');try{getSelection().removeAllRanges()}catch(_){}if(l)seekTo(lines[+l.dataset.i].t-offset+20)};
   const sl=$('amslide'),ratio=e=>{const r=sl.getBoundingClientRect();return Math.max(0,Math.min(1,(e.clientX-r.left)/r.width))};
   this.drag=null;this.pl=null;this.ci=-3;this.y=0;
   sl.onpointerdown=e=>{sl.setPointerCapture(e.pointerId);sl.classList.add('drag');this.drag=ratio(e)};
